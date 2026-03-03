@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  user_id        String          @id @default(uuid()) @db.Uuid
+  email          String          @unique @db.VarChar(255)
+  password_hash  String?         @db.VarChar(255)
+  role           String          @db.VarChar(20)
+  created_at     DateTime        @default(now())
+  provider       String          @default("LOCAL") @db.VarChar(20)
+  lembaga_budaya lembaga_budaya?
+  notifikasi     notifikasi[]
+}
+
+model lembaga_budaya {
+  lembaga_id     String          @id @default(uuid()) @db.Uuid
+  user_id        String          @unique @db.Uuid
+  nama_lembaga   String          @db.VarChar(255)
+  jenis_kesenian String          @db.VarChar(20)
+  alamat         String
+  no_hp          String          @db.VarChar(20)
+  email          String          @db.VarChar(255)
+  created_at     DateTime        @default(now())
+  users          users           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  pengajuan      pengajuan[]
+  sertifikat_nik sertifikat_nik?
+}
+
+model sertifikat_nik {
+  nik_id                 String         @id @default(uuid()) @db.Uuid
+  lembaga_id             String         @unique @db.Uuid
+  nomor_nik              String         @unique @db.VarChar(100)
+  file_path              String         @db.VarChar(255)
+  tanggal_terbit         DateTime       @db.Date
+  tanggal_berlaku_sampai DateTime       @db.Date
+  status_verifikasi      String         @default("PENDING") @db.VarChar(20)
+  catatan_admin          String?
+  lembaga_budaya         lembaga_budaya @relation(fields: [lembaga_id], references: [lembaga_id], onDelete: Cascade)
+}
+
+model jenis_fasilitasi {
+  jenis_fasilitasi_id Int                @id
+  nama                String             @unique @db.VarChar(20)
+  paket_fasilitasi    paket_fasilitasi[]
+}
+
+model paket_fasilitasi {
+  paket_id            String           @id @default(uuid()) @db.Uuid
+  jenis_fasilitasi_id Int
+  nama_paket          String           @db.VarChar(100)
+  kuota               Int
+  nilai_bantuan       Decimal?         @db.Decimal(18, 2)
+  catatan             String?
+  jenis_fasilitasi    jenis_fasilitasi @relation(fields: [jenis_fasilitasi_id], references: [jenis_fasilitasi_id], onDelete: Cascade)
+  pengajuan           pengajuan[]
+}
+
+model pengajuan {
+  pengajuan_id         String             @id @default(uuid()) @db.Uuid
+  lembaga_id           String             @db.Uuid
+  paket_id             String             @db.Uuid
+  judul_kegiatan       String?            @db.VarChar(255)
+  tujuan_kegiatan      String?
+  lokasi_kegiatan      String?            @db.VarChar(255)
+  tanggal_mulai        DateTime?          @db.Date
+  tanggal_selesai      DateTime?          @db.Date
+  total_pengajuan_dana Decimal            @db.Decimal(18, 2)
+  nomor_rekening       String?            @db.VarChar(100)
+  alamat_pengiriman    String?
+  proposal_file        String             @db.VarChar(255)
+  sertifikat_nik_file  String?            @db.VarChar(255)
+  status               String             @default("DIPROSES") @db.VarChar(20)
+  tanggal_pengajuan    DateTime           @default(now())
+  laporan_kegiatan     laporan_kegiatan?
+  pencairan_dana       pencairan_dana?
+  lembaga_budaya       lembaga_budaya     @relation(fields: [lembaga_id], references: [lembaga_id], onDelete: Cascade)
+  paket_fasilitasi     paket_fasilitasi   @relation(fields: [paket_id], references: [paket_id])
+  pengiriman_sarana    pengiriman_sarana?
+  surat_persetujuan    surat_persetujuan?
+}
+
+model surat_persetujuan {
+  surat_id       String    @id @default(uuid()) @db.Uuid
+  pengajuan_id   String    @unique @db.Uuid
+  nomor_surat    String    @unique @db.VarChar(100)
+  file_path      String    @db.VarChar(255)
+  tanggal_terbit DateTime  @db.Date
+  pengajuan      pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
+}
+
+model laporan_kegiatan {
+  laporan_id     String    @id @default(uuid()) @db.Uuid
+  pengajuan_id   String    @unique @db.Uuid
+  file_laporan   String    @db.VarChar(255)
+  status         String    @default("DIPROSES") @db.VarChar(20)
+  catatan_admin  String?
+  tanggal_upload DateTime  @default(now())
+  pengajuan      pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
+}
+
+model pencairan_dana {
+  pencairan_id      String    @id @default(uuid()) @db.Uuid
+  pengajuan_id      String    @unique @db.Uuid
+  bukti_transfer    String    @db.VarChar(255)
+  tanggal_pencairan DateTime  @db.Date
+  total_dana        Decimal   @db.Decimal(18, 2)
+  status            String    @default("PROSES") @db.VarChar(20)
+  pengajuan         pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
+}
+
+model pengiriman_sarana {
+  pengiriman_id      String    @id @default(uuid()) @db.Uuid
+  pengajuan_id       String    @unique @db.Uuid
+  tanggal_pengiriman DateTime  @db.Date
+  total_dana         Decimal?  @db.Decimal(18, 2)
+  status             String    @default("PROSES") @db.VarChar(20)
+  pengajuan          pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
+}
+
+model notifikasi {
+  notifikasi_id String   @id @default(uuid()) @db.Uuid
+  user_id       String   @db.Uuid
+  judul         String   @db.VarChar(255)
+  pesan         String
+  status_baca   Boolean  @default(false)
+  created_at    DateTime @default(now())
+  users         users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
