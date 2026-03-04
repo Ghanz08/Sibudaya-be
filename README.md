@@ -12,13 +12,68 @@ Backend API untuk sistem pengelolaan pengajuan fasilitasi lembaga budaya pada Di
 
 ---
 
-## Prasyarat
+## Instalasi Tools (dari Nol)
 
-Pastikan sudah terinstall di mesin kamu:
+> Lewati bagian yang sudah terinstall di mesin kamu.
 
-- [Node.js](https://nodejs.org) v18+
-- [pnpm](https://pnpm.io) `npm install -g pnpm`
-- [PostgreSQL](https://www.postgresql.org) (running di localhost)
+### Node.js v18+
+
+**Windows / macOS / Linux** — Download installer dari:
+[https://nodejs.org](https://nodejs.org) (pilih versi **LTS**)
+
+Verifikasi:
+
+```bash
+node -v   # harus v18 ke atas
+npm -v
+```
+
+---
+
+### pnpm
+
+```bash
+npm install -g pnpm
+```
+
+Verifikasi:
+
+```bash
+pnpm -v
+```
+
+---
+
+### PostgreSQL
+
+**macOS (Homebrew):**
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+```
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+**Windows:**
+Download installer di: [https://www.postgresql.org/download/windows](https://www.postgresql.org/download/windows)
+
+- Centang komponen: **PostgreSQL Server** + **Command Line Tools**
+- Catat password yang kamu set untuk user `postgres`
+- Setelah install, tambahkan ke PATH: `C:\Program Files\PostgreSQL\16\bin`
+
+Verifikasi (semua OS):
+
+```bash
+psql --version
+```
 
 ---
 
@@ -37,7 +92,29 @@ cd Sibudaya
 pnpm install
 ```
 
-### 3. Buat file `.env`
+### 3. Buat database PostgreSQL
+
+**macOS / Linux:**
+
+```bash
+createdb fasilitasi_dinas
+```
+
+**Windows** (buka Command Prompt sebagai Administrator):
+
+```bash
+createdb -U postgres fasilitasi_dinas
+```
+
+> Masukkan password postgres kamu jika diminta.
+
+Atau lewat `psql` (berlaku semua OS):
+
+```bash
+psql -U postgres -c "CREATE DATABASE fasilitasi_dinas;"
+```
+
+### 4. Buat file `.env`
 
 Copy dari template:
 
@@ -74,12 +151,6 @@ GOOGLE_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/callback
 > ```
 >
 > Jalankan dua kali — hasilnya berbeda untuk `JWT_SECRET` dan `JWT_REFRESH_SECRET`.
-
-### 4. Buat database PostgreSQL
-
-```bash
-createdb fasilitasi_dinas
-```
 
 ### 5. Jalankan migrasi
 
