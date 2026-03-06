@@ -123,6 +123,10 @@ export class AuthService {
         password_hash,
         role: 'USER',
         provider: 'LOCAL',
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        no_telp: dto.no_telp,
+        address: dto.address,
       },
     });
 

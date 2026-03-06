@@ -14,6 +14,10 @@ model users {
   role           String          @db.VarChar(20)
   created_at     DateTime        @default(now())
   provider       String          @default("LOCAL") @db.VarChar(20)
+  first_name     String?         @db.VarChar(100)
+  last_name      String?         @db.VarChar(100)
+  no_telp        String?         @db.VarChar(20)
+  address        String?
   lembaga_budaya lembaga_budaya?
   notifikasi     notifikasi[]
 }
