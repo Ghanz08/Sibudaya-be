@@ -1,0 +1,1400 @@
+{
+  "info": {
+    "name": "PAD2 - Fasilitasi Dinas Kebudayaan",
+    "description": "Koleksi endpoint API sistem fasilitasi pentas dan hibah Dinas Kebudayaan DIY.\n\n**Setup:**\n1. Set variable `base_url` → `http://localhost:3000/api/v1`\n2. Jalankan `POST /auth/login` → token akan otomatis tersimpan ke `access_token` via Test script\n3. Semua request yang butuh auth sudah pakai Bearer token dari variable `access_token`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "pengajuan_id", "value": "", "type": "string" },
+    { "key": "lembaga_id", "value": "", "type": "string" },
+    { "key": "notifikasi_id", "value": "", "type": "string" },
+    {
+      "key": "test_email",
+      "value": "isi_email_kamu@gmail.com",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"first_name\": \"Budi\",\n  \"last_name\": \"Santoso\",\n  \"address\": \"Jl. Malioboro No. 1, Yogyakarta\",\n  \"email\": \"budi@sanggar.com\",\n  \"no_telp\": \"081234567890\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
+                  "  pm.test('Register berhasil', () => pm.response.to.have.status(201));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"budi@sanggar.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
+                  "  pm.test('Login berhasil', () => pm.response.to.have.status(200));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
+                  "  pm.test('Login admin berhasil', () => pm.response.to.have.status(200));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Forgot password berhasil', () => pm.response.to.have.status(200));",
+                  "pm.test('Response punya message', () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\n  \"new_password\": \"NewPassword123!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎭 Fasilitasi (Reference Data)",
+      "item": [
+        {
+          "name": "Daftar Jenis Fasilitasi + Paket",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/fasilitasi",
+              "host": ["{{base_url}}"],
+              "path": ["fasilitasi"]
+            }
+          }
+        },
+        {
+          "name": "Paket Fasilitasi Pentas (id=1)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/fasilitasi/1/paket",
+              "host": ["{{base_url}}"],
+              "path": ["fasilitasi", "1", "paket"]
+            }
+          }
+        },
+        {
+          "name": "Paket Fasilitasi Hibah (id=2)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/fasilitasi/2/paket",
+              "host": ["{{base_url}}"],
+              "path": ["fasilitasi", "2", "paket"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏛️ Lembaga Budaya",
+      "item": [
+        {
+          "name": "Daftarkan Lembaga",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lembaga",
+              "host": ["{{base_url}}"],
+              "path": ["lembaga"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"nama_lembaga\": \"Sanggar Tribhuwana\",\n  \"jenis_kesenian\": \"Sanggar\",\n  \"alamat\": \"Jl. Malioboro No. 1, Yogyakarta\",\n  \"no_hp\": \"081234567890\",\n  \"email\": \"sanggar.tribhuwana@email.com\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('lembaga_id', res.lembaga_id);",
+                  "  pm.test('Lembaga berhasil dibuat', () => pm.response.to.have.status(201));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lihat Lembaga Saya",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lembaga/me",
+              "host": ["{{base_url}}"],
+              "path": ["lembaga", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Lembaga",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lembaga/me",
+              "host": ["{{base_url}}"],
+              "path": ["lembaga", "me"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"nama_lembaga\": \"Sanggar Tribhuwana Updated\",\n  \"no_hp\": \"089999999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Upload Sertifikat NIK",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lembaga/me/sertifikat-nik",
+              "host": ["{{base_url}}"],
+              "path": ["lembaga", "me", "sertifikat-nik"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "File sertifikat NIK (PDF/JPG/PNG, max 10MB)"
+                },
+                {
+                  "key": "nomor_nik",
+                  "value": "NIK.2024.00001",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_terbit",
+                  "value": "2024-01-15",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_berlaku_sampai",
+                  "value": "2027-01-15",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Pengajuan (User)",
+      "item": [
+        {
+          "name": "Submit Pengajuan Pentas",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/pentas",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "pentas"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "proposal_file",
+                  "type": "file",
+                  "description": "File proposal (PDF, max 10MB)"
+                },
+                {
+                  "key": "jenis_kegiatan",
+                  "value": "Pembinaan Sanggar",
+                  "type": "text",
+                  "description": "Pembinaan Sanggar | Pentas Seni"
+                },
+                {
+                  "key": "judul_kegiatan",
+                  "value": "Pentas Seni Tribhuwana 2026",
+                  "type": "text"
+                },
+                {
+                  "key": "tujuan_kegiatan",
+                  "value": "Melestarikan seni tari tradisional Yogyakarta dalam rangka HUT DIY",
+                  "type": "text"
+                },
+                {
+                  "key": "lokasi_kegiatan",
+                  "value": "Gedung Societet, Jl. Bhayangkara No.1, Yogyakarta",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_mulai",
+                  "value": "2026-07-01",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_selesai",
+                  "value": "2026-07-03",
+                  "type": "text"
+                },
+                {
+                  "key": "total_pengajuan_dana",
+                  "value": "30000000",
+                  "type": "text"
+                },
+                {
+                  "key": "nomor_rekening",
+                  "value": "1234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "nama_pemegang_rekening",
+                  "value": "Budi Santoso",
+                  "type": "text"
+                },
+                {
+                  "key": "alamat_lembaga",
+                  "value": "Jl. Malioboro No. 1, Yogyakarta",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('pengajuan_id', res.pengajuan_id);",
+                  "  pm.test('Pengajuan Pentas berhasil dibuat', () => pm.response.to.have.status(201));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit Pengajuan Hibah",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/hibah",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "hibah"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "proposal_file",
+                  "type": "file",
+                  "description": "File proposal (PDF, max 10MB)"
+                },
+                {
+                  "key": "jenis_kegiatan",
+                  "value": "Gamelan Slendro Pelog",
+                  "type": "text",
+                  "description": "Gamelan Slendro Pelog | Alat Musik Kesenian | Pakaian Kesenian"
+                },
+                {
+                  "key": "nama_penerima",
+                  "value": "Wayan Sujana",
+                  "type": "text"
+                },
+                {
+                  "key": "email_penerima",
+                  "value": "wayan@sanggar.com",
+                  "type": "text"
+                },
+                {
+                  "key": "no_hp_penerima",
+                  "value": "081234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "alamat_pengiriman",
+                  "value": "Jl. Kaliurang KM 10 No. 5",
+                  "type": "text"
+                },
+                {
+                  "key": "provinsi",
+                  "value": "Daerah Istimewa Yogyakarta",
+                  "type": "text"
+                },
+                { "key": "kabupaten_kota", "value": "Sleman", "type": "text" },
+                { "key": "kecamatan", "value": "Depok", "type": "text" },
+                {
+                  "key": "kelurahan_desa",
+                  "value": "Caturtunggal",
+                  "type": "text"
+                },
+                { "key": "kode_pos", "value": "55281", "type": "text" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('pengajuan_id', res.pengajuan_id);",
+                  "  pm.test('Pengajuan Hibah berhasil dibuat', () => pm.response.to.have.status(201));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Pengajuan Saya",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan"]
+            }
+          }
+        },
+        {
+          "name": "Detail Pengajuan (Timeline)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Upload Laporan Kegiatan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file_laporan",
+                  "type": "file",
+                  "description": "File laporan kegiatan (PDF, max 10MB)"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Admin — Pengajuan",
+      "item": [
+        {
+          "name": "Daftar Semua Pengajuan",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan?status=DALAM_PROSES",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "DALAM_PROSES",
+                  "description": "DALAM_PROSES | SELESAI | DITOLAK"
+                },
+                {
+                  "key": "jenis_fasilitasi_id",
+                  "value": "1",
+                  "disabled": true,
+                  "description": "1=Pentas, 2=Hibah"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail Pengajuan",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}"]
+            }
+          }
+        },
+        {
+          "name": "✅ Setujui Pemeriksaan (Pentas — wajib paket_id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"paket_id\": \"00000000-0000-0000-0000-000000000002\",\n  \"catatan\": \"Data lengkap dan sesuai. Paket A ditetapkan.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Setujui Pemeriksaan (Hibah — tanpa paket_id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"catatan\": \"Data dan dokumen telah diverifikasi sesuai ketentuan.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Tolak Pemeriksaan (+ surat penolakan opsional)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/tolak",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "tolak"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "surat_penolakan",
+                  "type": "file",
+                  "description": "Surat penolakan (PDF, opsional)"
+                },
+                {
+                  "key": "catatan_pemeriksaan",
+                  "value": "Dokumen NIK tidak sesuai dan proposal tidak lengkap.",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "📅 [Hibah] Tetapkan Tanggal Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "survey"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"tanggal_survey\": \"2026-04-15\",\n  \"catatan\": \"Survey lokasi akan dilakukan oleh tim lapangan Dinas Kebudayaan DIY.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ [Hibah] Selesaikan Survey",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/selesai",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "survey",
+                "selesai"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📄 Upload Surat Persetujuan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "surat-persetujuan"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "surat_file",
+                  "type": "file",
+                  "description": "File surat persetujuan (PDF, max 10MB)"
+                },
+                {
+                  "key": "nomor_surat",
+                  "value": "SP/DISBUD/2026/001",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_terbit",
+                  "value": "2026-04-20",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Konfirmasi Surat Persetujuan Ditandatangani",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "surat-persetujuan",
+                "konfirmasi"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Setujui Laporan Kegiatan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "laporan",
+                "setujui"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Tolak Laporan Kegiatan (wajib alasan)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/tolak",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "laporan",
+                "tolak"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"catatan_admin\": \"Laporan tidak sesuai template. Mohon lengkapi bagian dokumentasi kegiatan dan foto pelaksanaan.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "💰 [Pentas] Upload Bukti Transfer Pencairan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bukti_transfer",
+                  "type": "file",
+                  "description": "Bukti transfer bank (PDF/JPG, max 10MB)"
+                },
+                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "tanggal_pencairan",
+                  "value": "2026-06-01",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ [Pentas] Konfirmasi Pencairan Selesai",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "pencairan",
+                "selesai"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📦 [Hibah] Upload Bukti Pengiriman Sarana",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pengiriman",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pengiriman"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bukti_pengiriman",
+                  "type": "file",
+                  "description": "Bukti resi/foto pengiriman (PDF/JPG, max 10MB)"
+                },
+                {
+                  "key": "tanggal_pengiriman",
+                  "value": "2026-05-10",
+                  "type": "text"
+                },
+                {
+                  "key": "catatan",
+                  "value": "Dikirim via Pos Indonesia, resi terlampir.",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 Notifikasi",
+      "item": [
+        {
+          "name": "Daftar Notifikasi Saya",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifikasi",
+              "host": ["{{base_url}}"],
+              "path": ["notifikasi"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.length > 0) {",
+                  "    pm.collectionVariables.set('notifikasi_id', res[0].notifikasi_id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tandai Notifikasi Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifikasi/{{notifikasi_id}}/baca",
+              "host": ["{{base_url}}"],
+              "path": ["notifikasi", "{{notifikasi_id}}", "baca"]
+            }
+          }
+        },
+        {
+          "name": "Tandai Semua Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifikasi/baca-semua",
+              "host": ["{{base_url}}"],
+              "path": ["notifikasi", "baca-semua"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Flow Test — Fasilitasi Pentas (End-to-End)",
+      "description": "Jalankan secara berurutan untuk simulasi flow lengkap Fasilitasi Pentas.\n\n1. Register / Login User\n2. Daftarkan Lembaga\n3. Upload Sertifikat NIK\n4. Submit Pengajuan Pentas\n5. Login Admin → Setujui Pemeriksaan (isi paket_id)\n6. Upload Surat Persetujuan\n7. Konfirmasi Surat Persetujuan\n8. Login User → Upload Laporan Kegiatan\n9. Login Admin → Setujui Laporan\n10. Upload Bukti Transfer\n11. Konfirmasi Pencairan Selesai",
+      "item": [
+        {
+          "name": "1. Register User Pentas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"first_name\": \"Sari\",\n  \"last_name\": \"Dewi\",\n  \"address\": \"Jl. Pahlawan No. 10, Yogyakarta\",\n  \"email\": \"sari.dewi@sanggar.com\",\n  \"no_telp\": \"082345678901\",\n  \"password\": \"TestUser123!\",\n  \"confirm_password\": \"TestUser123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.access_token) {",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Daftarkan Lembaga",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/lembaga",
+              "host": ["{{base_url}}"],
+              "path": ["lembaga"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"nama_lembaga\": \"Sanggar Dewi Nusantara\",\n  \"jenis_kesenian\": \"Sanggar\",\n  \"alamat\": \"Jl. Pahlawan No. 10, Yogyakarta\",\n  \"no_hp\": \"082345678901\",\n  \"email\": \"dewi.nusantara@email.com\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.lembaga_id) {",
+                  "  pm.collectionVariables.set('lembaga_id', res.lembaga_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Submit Pengajuan Pentas",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/pentas",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "pentas"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "proposal_file", "type": "file" },
+                {
+                  "key": "jenis_kegiatan",
+                  "value": "Pentas Seni",
+                  "type": "text"
+                },
+                {
+                  "key": "judul_kegiatan",
+                  "value": "Pentas Seni Dewi Nusantara 2026",
+                  "type": "text"
+                },
+                {
+                  "key": "tujuan_kegiatan",
+                  "value": "Melestarikan tari Jawa klasik untuk generasi muda",
+                  "type": "text"
+                },
+                {
+                  "key": "lokasi_kegiatan",
+                  "value": "Pendopo Agung Kabupaten Sleman",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_mulai",
+                  "value": "2026-08-17",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_selesai",
+                  "value": "2026-08-17",
+                  "type": "text"
+                },
+                {
+                  "key": "total_pengajuan_dana",
+                  "value": "30000000",
+                  "type": "text"
+                },
+                {
+                  "key": "nomor_rekening",
+                  "value": "0987654321",
+                  "type": "text"
+                },
+                {
+                  "key": "nama_pemegang_rekening",
+                  "value": "Sari Dewi",
+                  "type": "text"
+                },
+                {
+                  "key": "alamat_lembaga",
+                  "value": "Jl. Pahlawan No. 10, Yogyakarta",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.pengajuan_id) {",
+                  "  pm.collectionVariables.set('pengajuan_id', res.pengajuan_id);",
+                  "  pm.test('pengajuan_id tersimpan: ' + res.pengajuan_id, () => true);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.access_token) {",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Admin Setujui Pemeriksaan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"paket_id\": \"00000000-0000-0000-0000-000000000002\",\n  \"catatan\": \"Data lengkap. Paket A (Rp 30.000.000) ditetapkan.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Admin Upload Surat Persetujuan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "surat-persetujuan"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "surat_file", "type": "file" },
+                {
+                  "key": "nomor_surat",
+                  "value": "SP/DISBUD/2026/001",
+                  "type": "text"
+                },
+                {
+                  "key": "tanggal_terbit",
+                  "value": "2026-04-25",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Admin Konfirmasi Surat Ditandatangani",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "surat-persetujuan",
+                "konfirmasi"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Login User Kembali",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"sari.dewi@sanggar.com\",\n  \"password\": \"TestUser123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.access_token) {",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. User Upload Laporan Kegiatan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file_laporan", "type": "file" }]
+            }
+          }
+        },
+        {
+          "name": "10. Login Admin Lagi",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.access_token) pm.collectionVariables.set('access_token', res.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. Admin Setujui Laporan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "laporan",
+                "setujui"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Admin Upload Bukti Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "bukti_transfer", "type": "file" },
+                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "tanggal_pencairan",
+                  "value": "2026-09-01",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "13. Admin Konfirmasi Pencairan Selesai",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "pencairan",
+                "selesai"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

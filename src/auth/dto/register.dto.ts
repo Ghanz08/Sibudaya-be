@@ -9,6 +9,26 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
+  @ApiProperty({ example: 'Budi', description: 'Nama depan' })
+  @IsString()
+  @IsNotEmpty({ message: 'Nama depan wajib diisi' })
+  @MaxLength(100)
+  first_name: string;
+
+  @ApiProperty({ example: 'Santoso', description: 'Nama belakang' })
+  @IsString()
+  @IsNotEmpty({ message: 'Nama belakang wajib diisi' })
+  @MaxLength(100)
+  last_name: string;
+
+  @ApiProperty({
+    example: 'Jl. Merdeka No. 1, Yogyakarta',
+    description: 'Alamat lengkap',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Alamat wajib diisi' })
+  address: string;
+
   @ApiProperty({
     example: 'user@example.com',
     description: 'Email unik pengguna',
@@ -16,6 +36,12 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Format email tidak valid' })
   @IsNotEmpty({ message: 'Email wajib diisi' })
   email: string;
+
+  @ApiProperty({ example: '081234567890', description: 'Nomor telepon' })
+  @IsString()
+  @IsNotEmpty({ message: 'Nomor HP wajib diisi' })
+  @MaxLength(20)
+  no_telp: string;
 
   @ApiProperty({
     example: 'Password123!',
@@ -27,32 +53,11 @@ export class RegisterDto {
   @MaxLength(64, { message: 'Password maksimal 64 karakter' })
   password: string;
 
-  @ApiPropertyOptional({ example: 'Budi', description: 'Nama depan' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  first_name?: string;
-
-  @ApiPropertyOptional({ example: 'Santoso', description: 'Nama belakang' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  last_name?: string;
-
-  @ApiPropertyOptional({
-    example: '081234567890',
-    description: 'Nomor telepon',
+  @ApiProperty({
+    example: 'Password123!',
+    description: 'Konfirmasi password — harus sama dengan password',
   })
-  @IsOptional()
   @IsString()
-  @MaxLength(20)
-  no_telp?: string;
-
-  @ApiPropertyOptional({
-    example: 'Jl. Merdeka No. 1, Jakarta',
-    description: 'Alamat lengkap',
-  })
-  @IsOptional()
-  @IsString()
-  address?: string;
+  @IsNotEmpty({ message: 'Konfirmasi password wajib diisi' })
+  confirm_password: string;
 }

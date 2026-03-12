@@ -2,13 +2,13 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -19,6 +19,10 @@ export interface SafeUser {
   role: string;
   provider: string;
   created_at: Date;
+  first_name: string | null;
+  last_name: string | null;
+  no_telp: string | null;
+  address: string | null;
 }
 
 // Struktur token response
@@ -36,6 +40,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -68,6 +73,10 @@ export class AuthService {
     role: string;
     provider: string;
     created_at: Date;
+    first_name?: string | null;
+    last_name?: string | null;
+    no_telp?: string | null;
+    address?: string | null;
   }): SafeUser {
     return {
       user_id: user.user_id,
@@ -75,6 +84,10 @@ export class AuthService {
       role: user.role,
       provider: user.provider,
       created_at: user.created_at,
+      first_name: user.first_name ?? null,
+      last_name: user.last_name ?? null,
+      no_telp: user.no_telp ?? null,
+      address: user.address ?? null,
     };
   }
 
@@ -113,6 +126,12 @@ export class AuthService {
 
     if (existing) {
       throw new ConflictException('Email sudah terdaftar');
+    }
+
+    if (dto.password !== dto.confirm_password) {
+      throw new BadRequestException(
+        'Password dan konfirmasi password tidak cocok',
+      );
     }
 
     const password_hash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
@@ -238,18 +257,18 @@ export class AuthService {
   // ─── Reset Password (MVP) ──────────────────────────────────────────────────
 
   /**
-   * Forgot password (MVP).
-   * Menghasilkan reset token bertanda waktu.
-   * Pada produksi, token ini dikirim via email.
+   * Forgot password.
+   * Membuat reset token dan mengirimkannya via email (Resend).
    */
-  async forgotPassword(email: string): Promise<{ reset_token: string }> {
+  async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.prisma.users.findUnique({ where: { email } });
 
     if (!user) {
       // Hindari email enumeration: selalu kembalikan response sukses
-      throw new NotFoundException(
-        'Jika email terdaftar, link reset akan dikirim',
-      );
+      return {
+        message:
+          'Jika email terdaftar, link reset password akan dikirim ke email kamu.',
+      };
     }
 
     if (user.provider === 'GOOGLE') {
@@ -258,7 +277,6 @@ export class AuthService {
       );
     }
 
-    // Buat reset token (di produksi kirim via email; di MVP kembalikan token)
     const resetPayload = {
       sub: user.user_id,
       email: user.email,
@@ -270,8 +288,12 @@ export class AuthService {
       expiresIn: '30m',
     });
 
-    // TODO: kirim email dengan link: /auth/reset-password?token=<reset_token>
-    return { reset_token };
+    await this.mailService.sendResetPasswordEmail(user.email, reset_token);
+
+    return {
+      message:
+        'Jika email terdaftar, link reset password akan dikirim ke email kamu.',
+    };
   }
 
   /**

@@ -9,8 +9,8 @@ async function bootstrap() {
   // Aktifkan validasi global (class-validator)
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: true, // strip field yang tidak ada di DTO
+      forbidNonWhitelisted: false, // jangan error untuk file upload fields (proposal_file, dll)
       transform: true,
     }),
   );

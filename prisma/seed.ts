@@ -30,29 +30,125 @@ async function main() {
   });
 
   if (existing) {
-    console.log('✅ SUPER_ADMIN sudah ada, seed dilewati.');
-    return;
-  }
+    console.log('✅ SUPER_ADMIN sudah ada, langsung ke seed fasilitasi.');
+  } else {
+    const password_hash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 12);
 
-  const password_hash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 12);
+    const superAdmin = await prisma.users.create({
+      data: {
+        email: SUPER_ADMIN_EMAIL,
+        password_hash,
+        role: 'SUPER_ADMIN',
+        provider: 'LOCAL',
+      },
+    });
 
-  const superAdmin = await prisma.users.create({
-    data: {
-      email: SUPER_ADMIN_EMAIL,
-      password_hash,
-      role: 'SUPER_ADMIN',
-      provider: 'LOCAL',
+    console.log('✅ SUPER_ADMIN berhasil dibuat:');
+    console.log(`   ID    : ${superAdmin.user_id}`);
+    console.log(`   Email : ${superAdmin.email}`);
+    console.log(`   Role  : ${superAdmin.role}`);
+    console.log('');
+    console.log(
+      '⚠️  PENTING: Segera ubah password default setelah login pertama!',
+    );
+  } // end else
+
+  // ── Seed jenis & paket fasilitasi ────────────────────────────────────────
+  console.log('\nMembuat data jenis & paket fasilitasi...');
+
+  await prisma.jenis_fasilitasi.upsert({
+    where: { jenis_fasilitasi_id: 1 },
+    update: {},
+    create: {
+      jenis_fasilitasi_id: 1,
+      nama: 'Fasilitasi Pentas',
+      deskripsi:
+        'Bantuan untuk pelaksanaan kegiatan pentas seni dan pembinaan lembaga budaya.',
     },
   });
 
-  console.log('✅ SUPER_ADMIN berhasil dibuat:');
-  console.log(`   ID    : ${superAdmin.user_id}`);
-  console.log(`   Email : ${superAdmin.email}`);
-  console.log(`   Role  : ${superAdmin.role}`);
-  console.log('');
-  console.log(
-    '⚠️  PENTING: Segera ubah password default setelah login pertama!',
-  );
+  await prisma.jenis_fasilitasi.upsert({
+    where: { jenis_fasilitasi_id: 2 },
+    update: {},
+    create: {
+      jenis_fasilitasi_id: 2,
+      nama: 'Fasilitasi Hibah',
+      deskripsi:
+        'Bantuan pendukung kegiatan seni seperti gamelan, alat musik, atau pakaian pentas.',
+    },
+  });
+
+  // Paket Fasilitasi Pentas
+  const paketPentas = [
+    {
+      paket_id: 'a1b2c3d4-e5f6-4a7b-8c9d-e0f1a2b3c4d5',
+      nama_paket: 'Paket Pembinaan',
+      kuota: 10,
+      nilai_bantuan: 60_000_000,
+    },
+    {
+      paket_id: 'b2c3d4e5-f6a7-4b8c-9d0e-f1a2b3c4d5e6',
+      nama_paket: 'Paket A',
+      kuota: 20,
+      nilai_bantuan: 30_000_000,
+    },
+    {
+      paket_id: 'c3d4e5f6-a7b8-4c9d-0e1f-a2b3c4d5e6f7',
+      nama_paket: 'Paket B',
+      kuota: 30,
+      nilai_bantuan: 20_000_000,
+    },
+    {
+      paket_id: 'd4e5f6a7-b8c9-4d0e-1f2a-b3c4d5e6f7a8',
+      nama_paket: 'Paket C',
+      kuota: 40,
+      nilai_bantuan: 10_000_000,
+    },
+    {
+      paket_id: 'e5f6a7b8-c9d0-4e1f-2a3b-c4d5e6f7a8b9',
+      nama_paket: 'Paket D',
+      kuota: 50,
+      nilai_bantuan: 5_000_000,
+    },
+  ];
+  for (const p of paketPentas) {
+    await prisma.paket_fasilitasi.upsert({
+      where: { paket_id: p.paket_id },
+      update: {},
+      create: { jenis_fasilitasi_id: 1, ...p },
+    });
+  }
+
+  // Paket Fasilitasi Hibah
+  const paketHibah = [
+    {
+      paket_id: 'f6a7b8c9-d0e1-4f2a-3b4c-d5e6f7a8b9c0',
+      nama_paket: 'Gamelan Slendro Pelog',
+      kuota: 5,
+      nilai_bantuan: null,
+    },
+    {
+      paket_id: 'a7b8c9d0-e1f2-4a3b-4c5d-e6f7a8b9c0d1',
+      nama_paket: 'Alat Musik Kesenian',
+      kuota: 20,
+      nilai_bantuan: null,
+    },
+    {
+      paket_id: 'b8c9d0e1-f2a3-4b4c-5d6e-f7a8b9c0d1e2',
+      nama_paket: 'Pakaian Kesenian',
+      kuota: 30,
+      nilai_bantuan: null,
+    },
+  ];
+  for (const p of paketHibah) {
+    await prisma.paket_fasilitasi.upsert({
+      where: { paket_id: p.paket_id },
+      update: {},
+      create: { jenis_fasilitasi_id: 2, ...p },
+    });
+  }
+
+  console.log('✅ Data jenis & paket fasilitasi berhasil dibuat.');
 }
 
 main()

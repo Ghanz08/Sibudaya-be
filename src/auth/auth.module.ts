@@ -3,6 +3,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { MailModule } from '../mail/mail.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 
@@ -19,6 +20,7 @@ import { RolesGuard } from './guards/roles.guard';
   imports: [
     PassportModule,
     ConfigModule,
+    MailModule,
     // JwtModule terdaftar secara async agar bisa menggunakan ConfigService
     JwtModule.registerAsync({
       imports: [ConfigModule],

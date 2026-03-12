@@ -26,7 +26,7 @@ model lembaga_budaya {
   lembaga_id     String          @id @default(uuid()) @db.Uuid
   user_id        String          @unique @db.Uuid
   nama_lembaga   String          @db.VarChar(255)
-  jenis_kesenian String          @db.VarChar(20)
+  jenis_kesenian String          @db.VarChar(50)
   alamat         String
   no_hp          String          @db.VarChar(20)
   email          String          @db.VarChar(255)
@@ -50,8 +50,10 @@ model sertifikat_nik {
 
 model jenis_fasilitasi {
   jenis_fasilitasi_id Int                @id
-  nama                String             @unique @db.VarChar(20)
+  nama                String             @unique @db.VarChar(50)
+  deskripsi           String?
   paket_fasilitasi    paket_fasilitasi[]
+  pengajuan           pengajuan[]
 }
 
 model paket_fasilitasi {
@@ -68,41 +70,72 @@ model paket_fasilitasi {
 model pengajuan {
   pengajuan_id         String             @id @default(uuid()) @db.Uuid
   lembaga_id           String             @db.Uuid
-  paket_id             String             @db.Uuid
+  jenis_fasilitasi_id  Int
+  paket_id             String?            @db.Uuid
+  jenis_kegiatan       String?            @db.VarChar(100)
+  // Pentas fields
   judul_kegiatan       String?            @db.VarChar(255)
   tujuan_kegiatan      String?
   lokasi_kegiatan      String?            @db.VarChar(255)
   tanggal_mulai        DateTime?          @db.Date
   tanggal_selesai      DateTime?          @db.Date
-  total_pengajuan_dana Decimal            @db.Decimal(18, 2)
+  total_pengajuan_dana Decimal?           @db.Decimal(18, 2)
   nomor_rekening       String?            @db.VarChar(100)
+  nama_pemegang_rekening String?          @db.VarChar(255)
+  // Hibah fields
+  nama_penerima        String?            @db.VarChar(255)
   alamat_pengiriman    String?
+  provinsi             String?            @db.VarChar(100)
+  kabupaten_kota       String?            @db.VarChar(100)
+  kecamatan            String?            @db.VarChar(100)
+  kelurahan_desa       String?            @db.VarChar(100)
+  kode_pos             String?            @db.VarChar(10)
+  // Documents
   proposal_file        String             @db.VarChar(255)
   sertifikat_nik_file  String?            @db.VarChar(255)
-  status               String             @default("DIPROSES") @db.VarChar(20)
+  // Status
+  status               String             @default("DALAM_PROSES") @db.VarChar(30)
+  status_pemeriksaan   String             @default("DALAM_PROSES") @db.VarChar(30)
+  catatan_pemeriksaan  String?
+  surat_penolakan_file String?            @db.VarChar(255)
   tanggal_pengajuan    DateTime           @default(now())
+  // Relations
   laporan_kegiatan     laporan_kegiatan?
   pencairan_dana       pencairan_dana?
   lembaga_budaya       lembaga_budaya     @relation(fields: [lembaga_id], references: [lembaga_id], onDelete: Cascade)
-  paket_fasilitasi     paket_fasilitasi   @relation(fields: [paket_id], references: [paket_id])
+  jenis_fasilitasi     jenis_fasilitasi   @relation(fields: [jenis_fasilitasi_id], references: [jenis_fasilitasi_id])
+  paket_fasilitasi     paket_fasilitasi?  @relation(fields: [paket_id], references: [paket_id])
   pengiriman_sarana    pengiriman_sarana?
   surat_persetujuan    surat_persetujuan?
+  survey_lapangan      survey_lapangan?
 }
 
 model surat_persetujuan {
-  surat_id       String    @id @default(uuid()) @db.Uuid
+  surat_id            String    @id @default(uuid()) @db.Uuid
+  pengajuan_id        String    @unique @db.Uuid
+  nomor_surat         String?   @db.VarChar(100)
+  file_path           String    @db.VarChar(255)
+  tanggal_terbit      DateTime  @db.Date
+  status              String    @default("DALAM_PROSES") @db.VarChar(30)
+  tanggal_konfirmasi  DateTime?
+  pengajuan           pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
+}
+
+model survey_lapangan {
+  survey_id      String    @id @default(uuid()) @db.Uuid
   pengajuan_id   String    @unique @db.Uuid
-  nomor_surat    String    @unique @db.VarChar(100)
-  file_path      String    @db.VarChar(255)
-  tanggal_terbit DateTime  @db.Date
+  tanggal_survey DateTime  @db.Date
+  status         String    @default("DALAM_PROSES") @db.VarChar(30)
+  catatan        String?
   pengajuan      pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
 }
 
 model laporan_kegiatan {
   laporan_id     String    @id @default(uuid()) @db.Uuid
   pengajuan_id   String    @unique @db.Uuid
-  file_laporan   String    @db.VarChar(255)
-  status         String    @default("DIPROSES") @db.VarChar(20)
+  file_laporan   String?   @db.VarChar(255)
+  template_file  String?   @db.VarChar(255)
+  status         String    @default("DALAM_PROSES") @db.VarChar(30)
   catatan_admin  String?
   tanggal_upload DateTime  @default(now())
   pengajuan      pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
@@ -111,19 +144,20 @@ model laporan_kegiatan {
 model pencairan_dana {
   pencairan_id      String    @id @default(uuid()) @db.Uuid
   pengajuan_id      String    @unique @db.Uuid
-  bukti_transfer    String    @db.VarChar(255)
-  tanggal_pencairan DateTime  @db.Date
-  total_dana        Decimal   @db.Decimal(18, 2)
-  status            String    @default("PROSES") @db.VarChar(20)
+  bukti_transfer    String?   @db.VarChar(255)
+  tanggal_pencairan DateTime? @db.Date
+  total_dana        Decimal?  @db.Decimal(18, 2)
+  status            String    @default("PROSES") @db.VarChar(30)
   pengajuan         pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
 }
 
 model pengiriman_sarana {
   pengiriman_id      String    @id @default(uuid()) @db.Uuid
   pengajuan_id       String    @unique @db.Uuid
-  tanggal_pengiriman DateTime  @db.Date
-  total_dana         Decimal?  @db.Decimal(18, 2)
-  status             String    @default("PROSES") @db.VarChar(20)
+  tanggal_pengiriman DateTime? @db.Date
+  bukti_pengiriman   String?   @db.VarChar(255)
+  catatan            String?
+  status             String    @default("PROSES") @db.VarChar(30)
   pengajuan          pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
 }
 
