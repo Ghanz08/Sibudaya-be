@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PAD2 - Fasilitasi Dinas Kebudayaan",
-    "description": "Koleksi endpoint API sistem fasilitasi pentas dan hibah Dinas Kebudayaan DIY.\n\n**Setup:**\n1. Set variable `base_url` → `http://localhost:3000/api/v1`\n2. Jalankan `POST /auth/login` → token akan otomatis tersimpan ke `access_token` via Test script\n3. Semua request yang butuh auth sudah pakai Bearer token dari variable `access_token`",
+    "description": "Koleksi endpoint API sistem fasilitasi pentas dan hibah Dinas Kebudayaan DIY.\n\n**Setup:**\n1. Set variable `base_url` → `http://localhost:3000/api/v1`\n2. Jalankan `POST /auth/login` → token USER tersimpan otomatis ke `user_token`\n3. Jalankan `POST /auth/login (Admin)` → token ADMIN tersimpan otomatis ke `admin_token`\n4. Endpoint user pakai `{{user_token}}`, endpoint admin pakai `{{admin_token}}` — tidak perlu ganti token manual",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -10,7 +10,8 @@
       "value": "http://localhost:3000/api/v1",
       "type": "string"
     },
-    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "user_token", "value": "", "type": "string" },
+    { "key": "admin_token", "value": "", "type": "string" },
     { "key": "refresh_token", "value": "", "type": "string" },
     { "key": "pengajuan_id", "value": "", "type": "string" },
     { "key": "lembaga_id", "value": "", "type": "string" },
@@ -48,7 +49,7 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "  const res = pm.response.json();",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('user_token', res.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
                   "  pm.test('Register berhasil', () => pm.response.to.have.status(201));",
                   "}"
@@ -80,7 +81,7 @@
                 "exec": [
                   "if (pm.response.code === 200 || pm.response.code === 201) {",
                   "  const res = pm.response.json();",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('user_token', res.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
                   "  pm.test('Login berhasil', () => pm.response.to.have.status(200));",
                   "}"
@@ -112,7 +113,7 @@
                 "exec": [
                   "if (pm.response.code === 200 || pm.response.code === 201) {",
                   "  const res = pm.response.json();",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('admin_token', res.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
                   "  pm.test('Login admin berhasil', () => pm.response.to.have.status(200));",
                   "}"
@@ -144,7 +145,7 @@
                 "exec": [
                   "if (pm.response.code === 200 || pm.response.code === 201) {",
                   "  const res = pm.response.json();",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('user_token', res.access_token);",
                   "}"
                 ]
               }
@@ -156,7 +157,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/me",
@@ -262,7 +263,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -296,7 +297,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/lembaga/me",
@@ -310,7 +311,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -330,7 +331,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/lembaga/me/sertifikat-nik",
@@ -374,7 +375,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/pentas",
@@ -463,7 +464,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/hibah",
@@ -540,7 +541,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan",
@@ -554,7 +555,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}",
@@ -568,7 +569,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
@@ -597,7 +598,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan?status=DALAM_PROSES",
@@ -624,7 +625,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}",
@@ -638,7 +639,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -658,7 +659,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -678,7 +679,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/tolak",
@@ -707,7 +708,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -727,7 +728,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/selesai",
@@ -747,7 +748,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
@@ -786,7 +787,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
@@ -806,7 +807,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
@@ -826,7 +827,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -852,7 +853,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
@@ -882,7 +883,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
@@ -902,7 +903,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pengiriman",
@@ -941,7 +942,7 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/notifikasi",
@@ -970,7 +971,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/notifikasi/{{notifikasi_id}}/baca",
@@ -984,7 +985,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/notifikasi/baca-semua",
@@ -1022,7 +1023,7 @@
                 "exec": [
                   "const res = pm.response.json();",
                   "if (res.access_token) {",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('user_token', res.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
                   "}"
                 ]
@@ -1035,7 +1036,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -1068,7 +1069,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/pentas",
@@ -1170,7 +1171,7 @@
                 "exec": [
                   "const res = pm.response.json();",
                   "if (res.access_token) {",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('admin_token', res.access_token);",
                   "}"
                 ]
               }
@@ -1182,7 +1183,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
@@ -1202,7 +1203,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
@@ -1237,7 +1238,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
@@ -1275,7 +1276,7 @@
                 "exec": [
                   "const res = pm.response.json();",
                   "if (res.access_token) {",
-                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('user_token', res.access_token);",
                   "}"
                 ]
               }
@@ -1287,7 +1288,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
@@ -1322,7 +1323,7 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res.access_token) pm.collectionVariables.set('access_token', res.access_token);"
+                  "if (res.access_token) pm.collectionVariables.set('admin_token', res.access_token);"
                 ]
               }
             }
@@ -1333,7 +1334,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
@@ -1353,7 +1354,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
@@ -1379,7 +1380,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
