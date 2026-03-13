@@ -16,6 +16,7 @@
     { "key": "pengajuan_id", "value": "", "type": "string" },
     { "key": "lembaga_id", "value": "", "type": "string" },
     { "key": "notifikasi_id", "value": "", "type": "string" },
+    { "key": "jenis_fasilitasi_id", "value": "1", "type": "string" },
     {
       "key": "test_email",
       "value": "isi_email_kamu@gmail.com",
@@ -228,6 +229,17 @@
               "raw": "{{base_url}}/api/v1/fasilitasi",
               "host": ["{{base_url}}"],
               "path": ["fasilitasi"]
+            }
+          }
+        },
+        {
+          "name": "Paket Fasilitasi by Jenis (variable)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/fasilitasi/{{jenis_fasilitasi_id}}/paket",
+              "host": ["{{base_url}}"],
+              "path": ["fasilitasi", "{{jenis_fasilitasi_id}}", "paket"]
             }
           }
         },
