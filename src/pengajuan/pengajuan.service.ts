@@ -6,10 +6,21 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../common/upload/upload.service';
+import { STATUS } from '../common/constants/status.constants';
 import {
   CreatePengajuanHibahDto,
   CreatePengajuanPentasDto,
 } from './dto/create-pengajuan.dto';
+import {
+  BatalkanPengajuanDto,
+  UpdatePengajuanHibahDto,
+  UpdatePengajuanPentasDto,
+} from './dto/update-pengajuan.dto';
+import {
+  PengajuanTimelineResponse,
+  TimelineStep,
+  TimelineStatus,
+} from './dto/pengajuan-timeline.dto';
 
 @Injectable()
 export class PengajuanService {
@@ -52,8 +63,8 @@ export class PengajuanService {
         nama_pemegang_rekening: dto.nama_pemegang_rekening,
         alamat_pengiriman: dto.alamat_lembaga,
         proposal_file: proposalPath,
-        status: 'DALAM_PROSES',
-        status_pemeriksaan: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
+        status_pemeriksaan: STATUS.DALAM_PROSES,
       },
       include: this.pengajuanInclude,
     });
@@ -91,8 +102,8 @@ export class PengajuanService {
         kelurahan_desa: dto.kelurahan_desa,
         kode_pos: dto.kode_pos,
         proposal_file: proposalPath,
-        status: 'DALAM_PROSES',
-        status_pemeriksaan: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
+        status_pemeriksaan: STATUS.DALAM_PROSES,
       },
       include: this.pengajuanInclude,
     });
@@ -140,7 +151,10 @@ export class PengajuanService {
       throw new ForbiddenException('Anda tidak berhak mengakses pengajuan ini');
     }
 
-    return data;
+    return {
+      ...data,
+      timeline: this.buildTimeline(data),
+    };
   }
 
   // ── Upload laporan kegiatan (user) ────────────────────────────────────────
@@ -176,13 +190,142 @@ export class PengajuanService {
       create: {
         pengajuan_id: pengajuanId,
         file_laporan: filePath,
-        status: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
       },
       update: {
         file_laporan: filePath,
-        status: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
         catatan_admin: null,
       },
+    });
+  }
+
+  async revisiPentas(
+    pengajuanId: string,
+    userId: string,
+    dto: UpdatePengajuanPentasDto,
+    proposalFile?: Express.Multer.File,
+  ) {
+    const pengajuan = await this.getOwnedPengajuanOrThrow(pengajuanId, userId);
+
+    if (pengajuan.jenis_fasilitasi_id !== 1) {
+      throw new BadRequestException('Pengajuan ini bukan jenis Pentas');
+    }
+    this.assertCanRevise(pengajuan.status_pemeriksaan);
+
+    const updateData: Record<string, unknown> = {
+      status: STATUS.DALAM_PROSES,
+      status_pemeriksaan: STATUS.DALAM_PROSES,
+      catatan_pemeriksaan: null,
+      surat_penolakan_file: null,
+      paket_id: null,
+    };
+
+    if (dto.jenis_kegiatan !== undefined)
+      updateData.jenis_kegiatan = dto.jenis_kegiatan;
+    if (dto.judul_kegiatan !== undefined)
+      updateData.judul_kegiatan = dto.judul_kegiatan;
+    if (dto.tujuan_kegiatan !== undefined)
+      updateData.tujuan_kegiatan = dto.tujuan_kegiatan;
+    if (dto.lokasi_kegiatan !== undefined)
+      updateData.lokasi_kegiatan = dto.lokasi_kegiatan;
+    if (dto.tanggal_mulai !== undefined)
+      updateData.tanggal_mulai = new Date(dto.tanggal_mulai);
+    if (dto.tanggal_selesai !== undefined)
+      updateData.tanggal_selesai = new Date(dto.tanggal_selesai);
+    if (dto.total_pengajuan_dana !== undefined)
+      updateData.total_pengajuan_dana = dto.total_pengajuan_dana;
+    if (dto.nomor_rekening !== undefined)
+      updateData.nomor_rekening = dto.nomor_rekening;
+    if (dto.nama_pemegang_rekening !== undefined)
+      updateData.nama_pemegang_rekening = dto.nama_pemegang_rekening;
+    if (dto.alamat_lembaga !== undefined)
+      updateData.alamat_pengiriman = dto.alamat_lembaga;
+
+    if (proposalFile) {
+      if (pengajuan.proposal_file) {
+        this.uploadService.deleteFile(pengajuan.proposal_file);
+      }
+      updateData.proposal_file = this.uploadService.buildFilePath(
+        proposalFile.destination.replace(process.cwd() + '/', ''),
+        proposalFile.filename,
+      );
+    }
+
+    return this.prisma.pengajuan.update({
+      where: { pengajuan_id: pengajuanId },
+      data: updateData,
+      include: this.pengajuanInclude,
+    });
+  }
+
+  async revisiHibah(
+    pengajuanId: string,
+    userId: string,
+    dto: UpdatePengajuanHibahDto,
+    proposalFile?: Express.Multer.File,
+  ) {
+    const pengajuan = await this.getOwnedPengajuanOrThrow(pengajuanId, userId);
+
+    if (pengajuan.jenis_fasilitasi_id !== 2) {
+      throw new BadRequestException('Pengajuan ini bukan jenis Hibah');
+    }
+    this.assertCanRevise(pengajuan.status_pemeriksaan);
+
+    const updateData: Record<string, unknown> = {
+      status: STATUS.DALAM_PROSES,
+      status_pemeriksaan: STATUS.DALAM_PROSES,
+      catatan_pemeriksaan: null,
+      surat_penolakan_file: null,
+      paket_id: null,
+    };
+
+    if (dto.jenis_kegiatan !== undefined)
+      updateData.jenis_kegiatan = dto.jenis_kegiatan;
+    if (dto.nama_penerima !== undefined)
+      updateData.nama_penerima = dto.nama_penerima;
+    if (dto.alamat_pengiriman !== undefined)
+      updateData.alamat_pengiriman = dto.alamat_pengiriman;
+    if (dto.provinsi !== undefined) updateData.provinsi = dto.provinsi;
+    if (dto.kabupaten_kota !== undefined)
+      updateData.kabupaten_kota = dto.kabupaten_kota;
+    if (dto.kecamatan !== undefined) updateData.kecamatan = dto.kecamatan;
+    if (dto.kelurahan_desa !== undefined)
+      updateData.kelurahan_desa = dto.kelurahan_desa;
+    if (dto.kode_pos !== undefined) updateData.kode_pos = dto.kode_pos;
+
+    if (proposalFile) {
+      if (pengajuan.proposal_file) {
+        this.uploadService.deleteFile(pengajuan.proposal_file);
+      }
+      updateData.proposal_file = this.uploadService.buildFilePath(
+        proposalFile.destination.replace(process.cwd() + '/', ''),
+        proposalFile.filename,
+      );
+    }
+
+    return this.prisma.pengajuan.update({
+      where: { pengajuan_id: pengajuanId },
+      data: updateData,
+      include: this.pengajuanInclude,
+    });
+  }
+
+  async batalkanPengajuan(
+    pengajuanId: string,
+    userId: string,
+    dto: BatalkanPengajuanDto,
+  ) {
+    const pengajuan = await this.getOwnedPengajuanOrThrow(pengajuanId, userId);
+    this.assertCanRevise(pengajuan.status_pemeriksaan);
+
+    return this.prisma.pengajuan.update({
+      where: { pengajuan_id: pengajuanId },
+      data: {
+        status: STATUS.DITOLAK,
+        catatan_pemeriksaan: dto.alasan ?? 'Dibatalkan oleh pemohon',
+      },
+      include: this.pengajuanInclude,
     });
   }
 
@@ -208,7 +351,7 @@ export class PengajuanService {
       where: {
         lembaga_id: lembagaId,
         jenis_fasilitasi_id: jenisFasilitasiId,
-        status: { not: 'DITOLAK' },
+        status: { notIn: [STATUS.DITOLAK, STATUS.SELESAI] },
       },
     });
     if (active) {
@@ -242,19 +385,171 @@ export class PengajuanService {
   ) {
     if (pengajuan.jenis_fasilitasi_id === 1) {
       // Pentas: surat_persetujuan must be SELESAI
-      if (pengajuan.surat_persetujuan?.status !== 'SELESAI') {
+      if (pengajuan.surat_persetujuan?.status !== STATUS.SELESAI) {
         throw new BadRequestException(
           'Tahap Surat Persetujuan belum selesai. Upload laporan belum diizinkan.',
         );
       }
     } else {
       // Hibah: pengiriman_sarana must be SELESAI
-      if (pengajuan.pengiriman_sarana?.status !== 'SELESAI') {
+      if (pengajuan.pengiriman_sarana?.status !== STATUS.SELESAI) {
         throw new BadRequestException(
           'Tahap Pengiriman Sarana Prasarana belum selesai. Upload laporan belum diizinkan.',
         );
       }
     }
+  }
+
+  private assertCanRevise(statusPemeriksaan: string) {
+    if (statusPemeriksaan !== STATUS.DITOLAK) {
+      throw new BadRequestException(
+        'Perbarui atau batalkan pengajuan hanya bisa setelah pemeriksaan ditolak',
+      );
+    }
+  }
+
+  private normalizeStepStatus(status?: string | null): TimelineStatus {
+    if (status === STATUS.DITOLAK) return STATUS.DITOLAK;
+    if (status === STATUS.SELESAI || status === STATUS.DISETUJUI)
+      return STATUS.SELESAI;
+    return STATUS.DALAM_PROSES;
+  }
+
+  private buildTimeline(data: any): PengajuanTimelineResponse {
+    const isPentas = data.jenis_fasilitasi_id === 1;
+    const pemeriksaanStatus = this.normalizeStepStatus(data.status_pemeriksaan);
+    const pemeriksaanRejected = pemeriksaanStatus === STATUS.DITOLAK;
+
+    const surveyStatus = data.survey_lapangan
+      ? this.normalizeStepStatus(data.survey_lapangan.status)
+      : STATUS.BELUM_TERSEDIA;
+    const surveyRejected = surveyStatus === STATUS.DITOLAK;
+
+    const suratPrereq = isPentas
+      ? pemeriksaanStatus === STATUS.SELESAI
+      : surveyStatus === STATUS.SELESAI;
+    const suratStatus: TimelineStatus = suratPrereq
+      ? data.surat_persetujuan
+        ? this.normalizeStepStatus(data.surat_persetujuan.status)
+        : STATUS.DALAM_PROSES
+      : STATUS.BELUM_TERSEDIA;
+
+    const pengirimanStatus: TimelineStatus = !isPentas
+      ? suratStatus === STATUS.SELESAI
+        ? data.pengiriman_sarana
+          ? this.normalizeStepStatus(data.pengiriman_sarana.status)
+          : STATUS.DALAM_PROSES
+        : STATUS.BELUM_TERSEDIA
+      : STATUS.BELUM_TERSEDIA;
+
+    const pencairanStatus: TimelineStatus = isPentas
+      ? data.laporan_kegiatan?.status === STATUS.DISETUJUI
+        ? data.pencairan_dana
+          ? this.normalizeStepStatus(data.pencairan_dana.status)
+          : STATUS.DALAM_PROSES
+        : STATUS.BELUM_TERSEDIA
+      : STATUS.BELUM_TERSEDIA;
+
+    const laporanPrereq = isPentas
+      ? suratStatus === STATUS.SELESAI
+      : pengirimanStatus === STATUS.SELESAI;
+    const laporanStatus: TimelineStatus = laporanPrereq
+      ? data.laporan_kegiatan
+        ? this.normalizeStepStatus(data.laporan_kegiatan.status)
+        : STATUS.DALAM_PROSES
+      : STATUS.BELUM_TERSEDIA;
+
+    const terminalAtSurvey = !isPentas && surveyRejected;
+    const forceBelumTersedia = (status: TimelineStatus): TimelineStatus => {
+      if (terminalAtSurvey && status !== STATUS.DITOLAK) {
+        return STATUS.BELUM_TERSEDIA;
+      }
+      return status;
+    };
+
+    const steps: TimelineStep[] = [
+      {
+        code: 'PENDAFTARAN',
+        title: 'Pengajuan Data Pendaftaran',
+        status: STATUS.SELESAI,
+      },
+      {
+        code: 'PEMERIKSAAN',
+        title: 'Pemeriksaan Data oleh Admin dan Penetapan Paket Fasilitas',
+        status: pemeriksaanStatus,
+        actions: pemeriksaanRejected
+          ? {
+              can_batalkan_pengajuan: true,
+              can_perbarui_pengajuan: true,
+            }
+          : undefined,
+      },
+    ];
+
+    if (!isPentas) {
+      steps.push({
+        code: 'SURVEY',
+        title: 'Survey Lapangan oleh Pihak Dinas Kebudayaan',
+        status: forceBelumTersedia(
+          pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : surveyStatus,
+        ),
+        is_terminal: surveyRejected,
+      });
+    }
+
+    steps.push({
+      code: 'SURAT_PERSETUJUAN',
+      title: 'Pengisian dan Penandatanganan Surat Persetujuan',
+      status: forceBelumTersedia(
+        pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : suratStatus,
+      ),
+    });
+
+    if (isPentas) {
+      steps.push({
+        code: 'PELAPORAN',
+        title: 'Pelaporan Kegiatan',
+        status: forceBelumTersedia(
+          pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : laporanStatus,
+        ),
+        actions:
+          laporanStatus === STATUS.DITOLAK
+            ? { can_unggah_ulang_laporan: true }
+            : undefined,
+      });
+      steps.push({
+        code: 'PENCAIRAN',
+        title: 'Pencairan Dana',
+        status: forceBelumTersedia(
+          pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : pencairanStatus,
+        ),
+      });
+    } else {
+      steps.push({
+        code: 'PENGIRIMAN',
+        title: 'Pengiriman Sarana Prasarana',
+        status: forceBelumTersedia(
+          pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : pengirimanStatus,
+        ),
+      });
+      steps.push({
+        code: 'PELAPORAN',
+        title: 'Pelaporan Kegiatan',
+        status: forceBelumTersedia(
+          pemeriksaanRejected ? STATUS.BELUM_TERSEDIA : laporanStatus,
+        ),
+        actions:
+          laporanStatus === STATUS.DITOLAK
+            ? { can_unggah_ulang_laporan: true }
+            : undefined,
+      });
+    }
+
+    return {
+      status_global: data.status,
+      jenis_fasilitasi_id: data.jenis_fasilitasi_id,
+      steps,
+    };
   }
 
   private readonly pengajuanInclude = {

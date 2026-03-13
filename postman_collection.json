@@ -577,6 +577,89 @@
           }
         },
         {
+          "name": "Perbarui Pengajuan Pentas (setelah ditolak pemeriksaan)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/pentas",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "pentas"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "proposal_file",
+                  "type": "file",
+                  "description": "Opsional: unggah proposal revisi"
+                },
+                {
+                  "key": "judul_kegiatan",
+                  "value": "Pentas Seni Tribhuwana 2026 (Revisi)",
+                  "type": "text"
+                },
+                {
+                  "key": "tujuan_kegiatan",
+                  "value": "Revisi tujuan kegiatan sesuai catatan pemeriksaan.",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Perbarui Pengajuan Hibah (setelah ditolak pemeriksaan)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/hibah",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "hibah"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "proposal_file",
+                  "type": "file",
+                  "description": "Opsional: unggah proposal revisi"
+                },
+                {
+                  "key": "alamat_pengiriman",
+                  "value": "Jl. Kaliurang KM 10 No. 10 (Revisi)",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Batalkan Pengajuan (setelah ditolak pemeriksaan)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/batal",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "batal"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"alasan\": \"Memilih membatalkan pengajuan setelah evaluasi internal lembaga.\"\n}"
+            }
+          }
+        },
+        {
           "name": "Upload Laporan Kegiatan",
           "request": {
             "method": "POST",
@@ -752,6 +835,32 @@
                 "survey",
                 "selesai"
               ]
+            }
+          }
+        },
+        {
+          "name": "❌ [Hibah] Tolak Survey (terminal)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "survey",
+                "tolak"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"catatan\": \"Hasil survey lapangan tidak memenuhi kriteria kelayakan hibah.\"\n}"
             }
           }
         },
@@ -938,6 +1047,242 @@
                 {
                   "key": "catatan",
                   "value": "Dikirim via Pos Indonesia, resi terlampir.",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚫 Error Test — Pengajuan Workflow",
+      "description": "Jalankan untuk memastikan endpoint menolak alur terbalik/invalid. Pastikan {{pengajuan_id}}, {{user_token}}, dan {{admin_token}} sudah terisi.",
+      "item": [
+        {
+          "name": "User revisi sebelum pemeriksaan ditolak -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/pentas",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "pentas"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "judul_kegiatan",
+                  "value": "Percobaan Revisi Sebelum Ditolak",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "User batalkan sebelum pemeriksaan ditolak -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/batal",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "batal"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"alasan\": \"Test batalkan sebelum ditolak\"\n}"
+            }
+          }
+        },
+        {
+          "name": "User upload laporan sebelum tahap terbuka -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file_laporan",
+                  "type": "file",
+                  "description": "Isi file untuk memicu validasi alur (bukan validasi file kosong)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin tolak survey sebelum survey dibuat -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "survey",
+                "tolak"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"catatan\": \"Tes invalid sequence: survey belum dibuat\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin upload pencairan sebelum laporan disetujui -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bukti_transfer",
+                  "type": "file",
+                  "description": "Isi file untuk memicu validasi alur"
+                },
+                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "tanggal_pencairan",
+                  "value": "2026-06-01",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin upload pengiriman hibah sebelum surat dikonfirmasi -> harus gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test('Response berisi message error', () => pm.expect(res.message).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pengiriman",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pengiriman"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bukti_pengiriman",
+                  "type": "file",
+                  "description": "Isi file untuk memicu validasi alur"
+                },
+                {
+                  "key": "tanggal_pengiriman",
+                  "value": "2026-05-10",
+                  "type": "text"
+                },
+                {
+                  "key": "catatan",
+                  "value": "Tes invalid sequence",
                   "type": "text"
                 }
               ]

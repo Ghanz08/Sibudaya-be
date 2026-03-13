@@ -25,6 +25,7 @@ import {
   FilterPengajuanDto,
   SetSurveyDto,
   SetujuiPemeriksaanDto,
+  TolakSurveyDto,
   TolakLaporanDto,
   TolakPemeriksaanDto,
   UploadBuktiPencairanDto,
@@ -101,6 +102,14 @@ export class AdminPengajuanController {
   @ApiOperation({ summary: '[Hibah] Tandai survey lapangan selesai' })
   selesaikanSurvey(@Param('id') id: string) {
     return this.service.selesaikanSurvey(id);
+  }
+
+  @Patch(':id/survey/tolak')
+  @ApiOperation({
+    summary: '[Hibah] Tandai survey lapangan ditolak (terminal)',
+  })
+  tolakSurvey(@Param('id') id: string, @Body() dto: TolakSurveyDto) {
+    return this.service.tolakSurvey(id, dto);
   }
 
   // ── Step: Surat Persetujuan ───────────────────────────────────────────────

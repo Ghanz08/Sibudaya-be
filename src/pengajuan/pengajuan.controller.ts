@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UploadedFile,
   UseGuards,
@@ -24,6 +25,11 @@ import {
   CreatePengajuanHibahDto,
   CreatePengajuanPentasDto,
 } from './dto/create-pengajuan.dto';
+import {
+  BatalkanPengajuanDto,
+  UpdatePengajuanHibahDto,
+  UpdatePengajuanPentasDto,
+} from './dto/update-pengajuan.dto';
 import { createDiskStorage } from '../common/upload/multer-storage.util';
 import {
   imageAndPdfFilter,
@@ -102,5 +108,69 @@ export class PengajuanController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.pengajuanService.uploadLaporan(id, user.user_id, file);
+  }
+
+  @Patch(':id/revisi/pentas')
+  @ApiOperation({
+    summary: 'Perbarui pengajuan Pentas setelah pemeriksaan ditolak',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('proposal_file', {
+      storage: createDiskStorage('uploads/proposal'),
+      fileFilter: imageAndPdfFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  revisiPentas(
+    @CurrentUser() user: { user_id: string },
+    @Param('id') id: string,
+    @Body() dto: UpdatePengajuanPentasDto,
+    @UploadedFile() proposalFile?: Express.Multer.File,
+  ) {
+    return this.pengajuanService.revisiPentas(
+      id,
+      user.user_id,
+      dto,
+      proposalFile,
+    );
+  }
+
+  @Patch(':id/revisi/hibah')
+  @ApiOperation({
+    summary: 'Perbarui pengajuan Hibah setelah pemeriksaan ditolak',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('proposal_file', {
+      storage: createDiskStorage('uploads/proposal'),
+      fileFilter: imageAndPdfFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  revisiHibah(
+    @CurrentUser() user: { user_id: string },
+    @Param('id') id: string,
+    @Body() dto: UpdatePengajuanHibahDto,
+    @UploadedFile() proposalFile?: Express.Multer.File,
+  ) {
+    return this.pengajuanService.revisiHibah(
+      id,
+      user.user_id,
+      dto,
+      proposalFile,
+    );
+  }
+
+  @Patch(':id/batal')
+  @ApiOperation({
+    summary: 'Batalkan pengajuan setelah pemeriksaan ditolak',
+  })
+  batalkan(
+    @CurrentUser() user: { user_id: string },
+    @Param('id') id: string,
+    @Body() dto: BatalkanPengajuanDto,
+  ) {
+    return this.pengajuanService.batalkanPengajuan(id, user.user_id, dto);
   }
 }

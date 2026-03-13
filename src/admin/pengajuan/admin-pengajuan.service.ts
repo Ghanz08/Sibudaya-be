@@ -6,10 +6,12 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../../common/upload/upload.service';
 import { NotifikasiService } from '../../notifikasi/notifikasi.service';
+import { STATUS } from '../../common/constants/status.constants';
 import {
   FilterPengajuanDto,
   SetSurveyDto,
   SetujuiPemeriksaanDto,
+  TolakSurveyDto,
   TolakLaporanDto,
   TolakPemeriksaanDto,
   UploadBuktiPencairanDto,
@@ -66,7 +68,7 @@ export class AdminPengajuanService {
 
   async setujuiPemeriksaan(pengajuanId: string, dto: SetujuiPemeriksaanDto) {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    if (pengajuan.status_pemeriksaan !== 'DALAM_PROSES') {
+    if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
     }
 
@@ -82,7 +84,7 @@ export class AdminPengajuanService {
     const updated = await this.prisma.pengajuan.update({
       where: { pengajuan_id: pengajuanId },
       data: {
-        status_pemeriksaan: 'DISETUJUI',
+        status_pemeriksaan: STATUS.DISETUJUI,
         catatan_pemeriksaan: dto.catatan,
         paket_id: dto.paket_id ?? null,
       },
@@ -103,7 +105,7 @@ export class AdminPengajuanService {
     suratFile?: Express.Multer.File,
   ) {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    if (pengajuan.status_pemeriksaan !== 'DALAM_PROSES') {
+    if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
     }
 
@@ -120,8 +122,8 @@ export class AdminPengajuanService {
     const updated = await this.prisma.pengajuan.update({
       where: { pengajuan_id: pengajuanId },
       data: {
-        status_pemeriksaan: 'DITOLAK',
-        status: 'DITOLAK',
+        status_pemeriksaan: STATUS.DITOLAK,
+        status: STATUS.DALAM_PROSES,
         catatan_pemeriksaan: dto.catatan_pemeriksaan,
         ...(suratPath && { surat_penolakan_file: suratPath }),
       },
@@ -130,7 +132,7 @@ export class AdminPengajuanService {
     await this.notifikasiService.kirim(
       userId,
       'Pengajuan Ditolak',
-      `Pengajuan Anda tidak dapat diproses lebih lanjut. ${dto.catatan_pemeriksaan ?? ''}`.trim(),
+      `Pemeriksaan data pengajuan ditolak. Silakan perbarui pengajuan atau batalkan pengajuan. ${dto.catatan_pemeriksaan ?? ''}`.trim(),
     );
 
     return updated;
@@ -150,7 +152,7 @@ export class AdminPengajuanService {
       create: {
         pengajuan_id: pengajuanId,
         tanggal_survey: new Date(dto.tanggal_survey),
-        status: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
         catatan: dto.catatan,
       },
       update: {
@@ -182,7 +184,7 @@ export class AdminPengajuanService {
 
     const survey = await this.prisma.survey_lapangan.update({
       where: { pengajuan_id: pengajuanId },
-      data: { status: 'SELESAI' },
+      data: { status: STATUS.SELESAI },
     });
 
     await this.notifikasiService.kirim(
@@ -192,6 +194,41 @@ export class AdminPengajuanService {
     );
 
     return survey;
+  }
+
+  async tolakSurvey(pengajuanId: string, dto: TolakSurveyDto) {
+    const pengajuan = await this.findDetailOrThrow(pengajuanId);
+    this.assertJenisHibah(pengajuan);
+
+    if (!pengajuan.survey_lapangan) {
+      throw new BadRequestException(
+        'Tanggal survey belum ditetapkan oleh admin',
+      );
+    }
+    if (pengajuan.survey_lapangan.status === STATUS.DITOLAK) {
+      throw new BadRequestException('Survey lapangan sudah ditolak');
+    }
+
+    const userId = pengajuan.lembaga_budaya.user_id;
+
+    await this.prisma.$transaction([
+      this.prisma.survey_lapangan.update({
+        where: { pengajuan_id: pengajuanId },
+        data: { status: STATUS.DITOLAK, catatan: dto.catatan },
+      }),
+      this.prisma.pengajuan.update({
+        where: { pengajuan_id: pengajuanId },
+        data: { status: STATUS.DITOLAK },
+      }),
+    ]);
+
+    await this.notifikasiService.kirim(
+      userId,
+      'Survey Lapangan Ditolak',
+      `Pengajuan hibah tidak dapat dilanjutkan karena hasil survey lapangan ditolak. ${dto.catatan}`,
+    );
+
+    return { message: 'Survey lapangan ditolak dan pengajuan dihentikan' };
   }
 
   // ── Step: Surat Persetujuan (upload) ─────────────────────────────────────
@@ -234,13 +271,13 @@ export class AdminPengajuanService {
         nomor_surat: dto.nomor_surat,
         file_path: filePath,
         tanggal_terbit: new Date(dto.tanggal_terbit),
-        status: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
       },
       update: {
         nomor_surat: dto.nomor_surat,
         file_path: filePath,
         tanggal_terbit: new Date(dto.tanggal_terbit),
-        status: 'DALAM_PROSES',
+        status: STATUS.DALAM_PROSES,
       },
     });
 
@@ -259,7 +296,7 @@ export class AdminPengajuanService {
     if (!pengajuan.surat_persetujuan) {
       throw new BadRequestException('Surat persetujuan belum diunggah');
     }
-    if (pengajuan.surat_persetujuan.status === 'SELESAI') {
+    if (pengajuan.surat_persetujuan.status === STATUS.SELESAI) {
       throw new BadRequestException('Surat persetujuan sudah dikonfirmasi');
     }
 
@@ -268,7 +305,7 @@ export class AdminPengajuanService {
     const surat = await this.prisma.surat_persetujuan.update({
       where: { pengajuan_id: pengajuanId },
       data: {
-        status: 'SELESAI',
+        status: STATUS.SELESAI,
         tanggal_konfirmasi: new Date(),
       },
     });
@@ -292,7 +329,7 @@ export class AdminPengajuanService {
         'Pemohon belum mengunggah laporan kegiatan',
       );
     }
-    if (pengajuan.laporan_kegiatan.status !== 'DALAM_PROSES') {
+    if (pengajuan.laporan_kegiatan.status !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Laporan sudah diproses sebelumnya');
     }
 
@@ -300,14 +337,14 @@ export class AdminPengajuanService {
 
     await this.prisma.laporan_kegiatan.update({
       where: { pengajuan_id: pengajuanId },
-      data: { status: 'DISETUJUI' },
+      data: { status: STATUS.DISETUJUI },
     });
 
     // For Pentas: create pencairan_dana record; for Hibah: mark pengajuan SELESAI
     if (pengajuan.jenis_fasilitasi_id === 1) {
       await this.prisma.pencairan_dana.upsert({
         where: { pengajuan_id: pengajuanId },
-        create: { pengajuan_id: pengajuanId, status: 'PROSES' },
+        create: { pengajuan_id: pengajuanId, status: STATUS.DALAM_PROSES },
         update: {},
       });
 
@@ -320,7 +357,7 @@ export class AdminPengajuanService {
       // Hibah — selesai
       await this.prisma.pengajuan.update({
         where: { pengajuan_id: pengajuanId },
-        data: { status: 'SELESAI' },
+        data: { status: STATUS.SELESAI },
       });
 
       await this.notifikasiService.kirim(
@@ -341,7 +378,7 @@ export class AdminPengajuanService {
         'Pemohon belum mengunggah laporan kegiatan',
       );
     }
-    if (pengajuan.laporan_kegiatan.status !== 'DALAM_PROSES') {
+    if (pengajuan.laporan_kegiatan.status !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Laporan sudah diproses sebelumnya');
     }
 
@@ -349,7 +386,7 @@ export class AdminPengajuanService {
 
     await this.prisma.laporan_kegiatan.update({
       where: { pengajuan_id: pengajuanId },
-      data: { status: 'DITOLAK', catatan_admin: dto.catatan_admin },
+      data: { status: STATUS.DITOLAK, catatan_admin: dto.catatan_admin },
     });
 
     await this.notifikasiService.kirim(
@@ -379,7 +416,10 @@ export class AdminPengajuanService {
         'Tahap pencairan dana belum dibuka. Laporan kegiatan harus disetujui terlebih dahulu.',
       );
     }
-    if (pengajuan.pencairan_dana.status !== 'PROSES') {
+    if (pengajuan.pencairan_dana.status !== STATUS.DALAM_PROSES) {
+      throw new BadRequestException('Bukti transfer sudah diunggah');
+    }
+    if (pengajuan.pencairan_dana.bukti_transfer) {
       throw new BadRequestException('Bukti transfer sudah diunggah');
     }
 
@@ -396,7 +436,7 @@ export class AdminPengajuanService {
         bukti_transfer: filePath,
         total_dana: dto.total_dana,
         tanggal_pencairan: new Date(dto.tanggal_pencairan),
-        status: 'MENUNGGU_KONFIRMASI',
+        status: STATUS.DALAM_PROSES,
       },
     });
 
@@ -413,7 +453,10 @@ export class AdminPengajuanService {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
     this.assertJenisPentas(pengajuan);
 
-    if (pengajuan.pencairan_dana?.status !== 'MENUNGGU_KONFIRMASI') {
+    if (
+      pengajuan.pencairan_dana?.status !== STATUS.DALAM_PROSES ||
+      !pengajuan.pencairan_dana?.bukti_transfer
+    ) {
       throw new BadRequestException(
         'Bukti transfer belum diunggah atau pencairan sudah selesai',
       );
@@ -424,11 +467,11 @@ export class AdminPengajuanService {
     await this.prisma.$transaction([
       this.prisma.pencairan_dana.update({
         where: { pengajuan_id: pengajuanId },
-        data: { status: 'SELESAI' },
+        data: { status: STATUS.SELESAI },
       }),
       this.prisma.pengajuan.update({
         where: { pengajuan_id: pengajuanId },
-        data: { status: 'SELESAI' },
+        data: { status: STATUS.SELESAI },
       }),
     ]);
 
@@ -454,7 +497,7 @@ export class AdminPengajuanService {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
     this.assertJenisHibah(pengajuan);
 
-    if (pengajuan.surat_persetujuan?.status !== 'SELESAI') {
+    if (pengajuan.surat_persetujuan?.status !== STATUS.SELESAI) {
       throw new BadRequestException(
         'Surat persetujuan belum dikonfirmasi. Pengiriman sarana belum bisa dilakukan.',
       );
@@ -481,13 +524,13 @@ export class AdminPengajuanService {
         tanggal_pengiriman: new Date(dto.tanggal_pengiriman),
         bukti_pengiriman: filePath,
         catatan: dto.catatan,
-        status: 'SELESAI',
+        status: STATUS.SELESAI,
       },
       update: {
         tanggal_pengiriman: new Date(dto.tanggal_pengiriman),
         bukti_pengiriman: filePath,
         catatan: dto.catatan,
-        status: 'SELESAI',
+        status: STATUS.SELESAI,
       },
     });
 
@@ -523,7 +566,7 @@ export class AdminPengajuanService {
   private assertPemeriksaanDisetujui(
     pengajuan: Awaited<ReturnType<AdminPengajuanService['findDetailOrThrow']>>,
   ) {
-    if (pengajuan.status_pemeriksaan !== 'DISETUJUI') {
+    if (pengajuan.status_pemeriksaan !== STATUS.DISETUJUI) {
       throw new BadRequestException(
         'Pemeriksaan data belum disetujui. Tahap ini belum bisa dilanjutkan.',
       );

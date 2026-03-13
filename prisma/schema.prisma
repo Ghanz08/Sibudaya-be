@@ -147,7 +147,7 @@ model pencairan_dana {
   bukti_transfer    String?   @db.VarChar(255)
   tanggal_pencairan DateTime? @db.Date
   total_dana        Decimal?  @db.Decimal(18, 2)
-  status            String    @default("PROSES") @db.VarChar(30)
+  status            String    @default("DALAM_PROSES") @db.VarChar(30)
   pengajuan         pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
 }
 
@@ -157,7 +157,7 @@ model pengiriman_sarana {
   tanggal_pengiriman DateTime? @db.Date
   bukti_pengiriman   String?   @db.VarChar(255)
   catatan            String?
-  status             String    @default("PROSES") @db.VarChar(30)
+  status             String    @default("DALAM_PROSES") @db.VarChar(30)
   pengajuan          pengajuan @relation(fields: [pengajuan_id], references: [pengajuan_id], onDelete: Cascade)
 }
 

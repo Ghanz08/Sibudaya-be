@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -10,6 +11,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { STATUS } from '../../../common/constants/status.constants';
 
 // ── Pemeriksaan ──────────────────────────────────────────────────────────────
 
@@ -46,6 +48,13 @@ export class SetSurveyDto {
   @IsString()
   @IsOptional()
   catatan?: string;
+}
+
+export class TolakSurveyDto {
+  @ApiProperty({ description: 'Alasan penolakan hasil survey lapangan' })
+  @IsString()
+  @IsNotEmpty()
+  catatan: string;
 }
 
 // ── Surat Persetujuan ────────────────────────────────────────────────────────
@@ -110,6 +119,7 @@ export class UploadBuktiPengirimanDto {
 
 export class FilterPengajuanDto {
   @ApiPropertyOptional({ example: 'DALAM_PROSES' })
+  @IsIn([STATUS.DALAM_PROSES, STATUS.DITOLAK, STATUS.SELESAI])
   @IsString()
   @IsOptional()
   status?: string;
