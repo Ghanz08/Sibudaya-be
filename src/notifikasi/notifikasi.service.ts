@@ -11,6 +11,17 @@ export class NotifikasiService {
     });
   }
 
+  async kirimKeAdmin(judul: string, pesan: string) {
+    const admins = await this.prisma.users.findMany({
+      where: { role: 'ADMIN' },
+      select: { user_id: true },
+    });
+    if (admins.length === 0) return;
+    await this.prisma.notifikasi.createMany({
+      data: admins.map((a) => ({ user_id: a.user_id, judul, pesan })),
+    });
+  }
+
   async findByUser(userId: string) {
     const data = await this.prisma.notifikasi.findMany({
       where: { user_id: userId },

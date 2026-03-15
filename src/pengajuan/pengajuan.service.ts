@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../common/upload/upload.service';
+import { NotifikasiService } from '../notifikasi/notifikasi.service';
 import { STATUS } from '../common/constants/status.constants';
 import {
   CreatePengajuanHibahDto,
@@ -27,6 +28,7 @@ export class PengajuanService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
+    private readonly notifikasiService: NotifikasiService,
   ) {}
 
   // ── Submit Pentas ─────────────────────────────────────────────────────────
@@ -48,7 +50,7 @@ export class PengajuanService {
       proposalFile.filename,
     );
 
-    return this.prisma.pengajuan.create({
+    const result = await this.prisma.pengajuan.create({
       data: {
         lembaga_id: lembaga.lembaga_id,
         jenis_fasilitasi_id: 1,
@@ -68,6 +70,13 @@ export class PengajuanService {
       },
       include: this.pengajuanInclude,
     });
+
+    await this.notifikasiService.kirimKeAdmin(
+      'Pengajuan Fasilitasi Pentas Baru',
+      `Ada pengajuan Fasilitasi Pentas baru yang perlu diperiksa (${dto.judul_kegiatan ?? ''}).`,
+    );
+
+    return result;
   }
 
   // ── Submit Hibah ──────────────────────────────────────────────────────────
@@ -89,7 +98,7 @@ export class PengajuanService {
       proposalFile.filename,
     );
 
-    return this.prisma.pengajuan.create({
+    const result = await this.prisma.pengajuan.create({
       data: {
         lembaga_id: lembaga.lembaga_id,
         jenis_fasilitasi_id: 2,
@@ -107,6 +116,13 @@ export class PengajuanService {
       },
       include: this.pengajuanInclude,
     });
+
+    await this.notifikasiService.kirimKeAdmin(
+      'Pengajuan Fasilitasi Hibah Baru',
+      `Ada pengajuan Fasilitasi Hibah baru (${dto.nama_penerima ?? ''}) yang perlu diperiksa.`,
+    );
+
+    return result;
   }
 
   // ── List pengajuan milik user ─────────────────────────────────────────────
@@ -185,7 +201,7 @@ export class PengajuanService {
       this.uploadService.deleteFile(existing.file_laporan);
     }
 
-    return this.prisma.laporan_kegiatan.upsert({
+    const laporan = await this.prisma.laporan_kegiatan.upsert({
       where: { pengajuan_id: pengajuanId },
       create: {
         pengajuan_id: pengajuanId,
@@ -198,6 +214,13 @@ export class PengajuanService {
         catatan_admin: null,
       },
     });
+
+    await this.notifikasiService.kirimKeAdmin(
+      'Laporan Kegiatan Diunggah',
+      `Pemohon telah mengunggah laporan kegiatan. Silakan tinjau dan setujui laporan tersebut.`,
+    );
+
+    return laporan;
   }
 
   async revisiPentas(
@@ -252,11 +275,18 @@ export class PengajuanService {
       );
     }
 
-    return this.prisma.pengajuan.update({
+    const updated = await this.prisma.pengajuan.update({
       where: { pengajuan_id: pengajuanId },
       data: updateData,
       include: this.pengajuanInclude,
     });
+
+    await this.notifikasiService.kirimKeAdmin(
+      'Pengajuan Pentas Diperbarui',
+      `Pemohon telah memperbarui data pengajuan Fasilitasi Pentas. Silakan periksa kembali.`,
+    );
+
+    return updated;
   }
 
   async revisiHibah(
@@ -304,11 +334,18 @@ export class PengajuanService {
       );
     }
 
-    return this.prisma.pengajuan.update({
+    const updated = await this.prisma.pengajuan.update({
       where: { pengajuan_id: pengajuanId },
       data: updateData,
       include: this.pengajuanInclude,
     });
+
+    await this.notifikasiService.kirimKeAdmin(
+      'Pengajuan Hibah Diperbarui',
+      `Pemohon telah memperbarui data pengajuan Fasilitasi Hibah. Silakan periksa kembali.`,
+    );
+
+    return updated;
   }
 
   async batalkanPengajuan(
