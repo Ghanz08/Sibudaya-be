@@ -74,6 +74,7 @@ export class PengajuanService {
     await this.notifikasiService.kirimKeAdmin(
       'Pengajuan Fasilitasi Pentas Baru',
       `Ada pengajuan Fasilitasi Pentas baru yang perlu diperiksa (${dto.judul_kegiatan ?? ''}).`,
+      userId,
     );
 
     return result;
@@ -120,6 +121,7 @@ export class PengajuanService {
     await this.notifikasiService.kirimKeAdmin(
       'Pengajuan Fasilitasi Hibah Baru',
       `Ada pengajuan Fasilitasi Hibah baru (${dto.nama_penerima ?? ''}) yang perlu diperiksa.`,
+      userId,
     );
 
     return result;
@@ -218,6 +220,7 @@ export class PengajuanService {
     await this.notifikasiService.kirimKeAdmin(
       'Laporan Kegiatan Diunggah',
       `Pemohon telah mengunggah laporan kegiatan. Silakan tinjau dan setujui laporan tersebut.`,
+      userId,
     );
 
     return laporan;
@@ -284,6 +287,7 @@ export class PengajuanService {
     await this.notifikasiService.kirimKeAdmin(
       'Pengajuan Pentas Diperbarui',
       `Pemohon telah memperbarui data pengajuan Fasilitasi Pentas. Silakan periksa kembali.`,
+      userId,
     );
 
     return updated;
@@ -343,6 +347,7 @@ export class PengajuanService {
     await this.notifikasiService.kirimKeAdmin(
       'Pengajuan Hibah Diperbarui',
       `Pemohon telah memperbarui data pengajuan Fasilitasi Hibah. Silakan periksa kembali.`,
+      userId,
     );
 
     return updated;
