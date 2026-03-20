@@ -10,16 +10,59 @@
       "value": "http://localhost:3000/api/v1",
       "type": "string"
     },
-    { "key": "user_token", "value": "", "type": "string" },
-    { "key": "admin_token", "value": "", "type": "string" },
-    { "key": "refresh_token", "value": "", "type": "string" },
-    { "key": "pengajuan_id", "value": "", "type": "string" },
-    { "key": "lembaga_id", "value": "", "type": "string" },
-    { "key": "notifikasi_id", "value": "", "type": "string" },
-    { "key": "jenis_fasilitasi_id", "value": "1", "type": "string" },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "super_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pengajuan_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lembaga_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notifikasi_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "jenis_fasilitasi_id",
+      "value": "1",
+      "type": "string"
+    },
     {
       "key": "test_email",
       "value": "isi_email_kamu@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "paket_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_user_id",
+      "value": "",
       "type": "string"
     }
   ],
@@ -31,15 +74,24 @@
           "name": "Register",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/register",
+              "raw": "{{base_url}}/auth/register",
               "host": ["{{base_url}}"],
               "path": ["auth", "register"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"first_name\": \"Budi\",\n  \"last_name\": \"Santoso\",\n  \"address\": \"Jl. Malioboro No. 1, Yogyakarta\",\n  \"email\": \"budi@sanggar.com\",\n  \"no_telp\": \"081234567890\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}"
             }
           },
@@ -63,15 +115,24 @@
           "name": "Login",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
+              "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"budi@sanggar.com\",\n  \"password\": \"Password123!\"\n}"
             }
           },
@@ -95,15 +156,24 @@
           "name": "Login (Admin)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
+              "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
             }
           },
@@ -124,18 +194,67 @@
           ]
         },
         {
+          "name": "Login (Super Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('super_admin_token', res.access_token);",
+                  "  pm.test('Login super admin berhasil', () => pm.response.to.have.status(200));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Refresh Token",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "raw": "{{base_url}}/auth/refresh",
               "host": ["{{base_url}}"],
               "path": ["auth", "refresh"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
             }
           },
@@ -158,10 +277,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/me",
+              "raw": "{{base_url}}/auth/me",
               "host": ["{{base_url}}"],
               "path": ["auth", "me"]
             }
@@ -186,15 +308,24 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "raw": "{{base_url}}/auth/forgot-password",
               "host": ["{{base_url}}"],
               "path": ["auth", "forgot-password"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
             }
           }
@@ -203,16 +334,89 @@
           "name": "Reset Password",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "raw": "{{base_url}}/auth/reset-password",
               "host": ["{{base_url}}"],
               "path": ["auth", "reset-password"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\n  \"new_password\": \"NewPassword123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"first_name\": \"Budi Update\",\n  \"address\": \"Jl. Baru No. 10\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin Only (role check)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/admin-only",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "admin-only"]
+            }
+          }
+        },
+        {
+          "name": "Super Admin Only (role check)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/super-admin-only",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "super-admin-only"]
             }
           }
         }
@@ -226,7 +430,7 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/v1/fasilitasi",
+              "raw": "{{base_url}}/fasilitasi",
               "host": ["{{base_url}}"],
               "path": ["fasilitasi"]
             }
@@ -237,7 +441,7 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/v1/fasilitasi/{{jenis_fasilitasi_id}}/paket",
+              "raw": "{{base_url}}/fasilitasi/{{jenis_fasilitasi_id}}/paket",
               "host": ["{{base_url}}"],
               "path": ["fasilitasi", "{{jenis_fasilitasi_id}}", "paket"]
             }
@@ -248,7 +452,7 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/v1/fasilitasi/1/paket",
+              "raw": "{{base_url}}/fasilitasi/1/paket",
               "host": ["{{base_url}}"],
               "path": ["fasilitasi", "1", "paket"]
             }
@@ -259,7 +463,7 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/v1/fasilitasi/2/paket",
+              "raw": "{{base_url}}/fasilitasi/2/paket",
               "host": ["{{base_url}}"],
               "path": ["fasilitasi", "2", "paket"]
             }
@@ -275,17 +479,27 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/lembaga",
+              "raw": "{{base_url}}/lembaga",
               "host": ["{{base_url}}"],
               "path": ["lembaga"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"nama_lembaga\": \"Sanggar Tribhuwana\",\n  \"jenis_kesenian\": \"Sanggar\",\n  \"alamat\": \"Jl. Malioboro No. 1, Yogyakarta\",\n  \"no_hp\": \"081234567890\",\n  \"email\": \"sanggar.tribhuwana@email.com\"\n}"
             }
           },
@@ -309,10 +523,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/lembaga/me",
+              "raw": "{{base_url}}/lembaga/me",
               "host": ["{{base_url}}"],
               "path": ["lembaga", "me"]
             }
@@ -323,17 +540,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/lembaga/me",
+              "raw": "{{base_url}}/lembaga/me",
               "host": ["{{base_url}}"],
               "path": ["lembaga", "me"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"nama_lembaga\": \"Sanggar Tribhuwana Updated\",\n  \"no_hp\": \"089999999999\"\n}"
             }
           }
@@ -343,10 +570,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/lembaga/me/sertifikat-nik",
+              "raw": "{{base_url}}/lembaga/me/sertifikat-nik",
               "host": ["{{base_url}}"],
               "path": ["lembaga", "me", "sertifikat-nik"]
             },
@@ -387,10 +617,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/pentas",
+              "raw": "{{base_url}}/pengajuan/pentas",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "pentas"]
             },
@@ -476,10 +709,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/hibah",
+              "raw": "{{base_url}}/pengajuan/hibah",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "hibah"]
             },
@@ -522,14 +758,26 @@
                   "value": "Daerah Istimewa Yogyakarta",
                   "type": "text"
                 },
-                { "key": "kabupaten_kota", "value": "Sleman", "type": "text" },
-                { "key": "kecamatan", "value": "Depok", "type": "text" },
+                {
+                  "key": "kabupaten_kota",
+                  "value": "Sleman",
+                  "type": "text"
+                },
+                {
+                  "key": "kecamatan",
+                  "value": "Depok",
+                  "type": "text"
+                },
                 {
                   "key": "kelurahan_desa",
                   "value": "Caturtunggal",
                   "type": "text"
                 },
-                { "key": "kode_pos", "value": "55281", "type": "text" }
+                {
+                  "key": "kode_pos",
+                  "value": "55281",
+                  "type": "text"
+                }
               ]
             }
           },
@@ -553,10 +801,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan",
+              "raw": "{{base_url}}/pengajuan",
               "host": ["{{base_url}}"],
               "path": ["pengajuan"]
             }
@@ -567,10 +818,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}"]
             }
@@ -581,10 +835,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/pentas",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/revisi/pentas",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "pentas"]
             },
@@ -615,10 +872,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/hibah",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/revisi/hibah",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "hibah"]
             },
@@ -644,17 +904,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/batal",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/batal",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "batal"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"alasan\": \"Memilih membatalkan pengajuan setelah evaluasi internal lembaga.\"\n}"
             }
           }
@@ -664,10 +934,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/laporan",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
             },
@@ -693,10 +966,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan?status=DALAM_PROSES",
+              "raw": "{{base_url}}/admin/pengajuan?status=DALAM_PROSES",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan"],
               "query": [
@@ -720,10 +996,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}"]
             }
@@ -734,17 +1013,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/setujui",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"paket_id\": \"b2c3d4e5-f6a7-4b8c-9d0e-f1a2b3c4d5e6\",\n  \"catatan\": \"Data lengkap dan sesuai. Paket A ditetapkan.\"\n}"
             }
           }
@@ -754,17 +1043,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/setujui",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"catatan\": \"Data dan dokumen telah diverifikasi sesuai ketentuan.\"\n}"
             }
           }
@@ -774,10 +1073,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/tolak",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/tolak",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "tolak"]
             },
@@ -803,17 +1105,27 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/survey",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "survey"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"tanggal_survey\": \"2026-04-15\",\n  \"catatan\": \"Survey lokasi akan dilakukan oleh tim lapangan Dinas Kebudayaan DIY.\"\n}"
             }
           }
@@ -823,10 +1135,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/selesai",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/survey/selesai",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -843,11 +1158,17 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -859,7 +1180,11 @@
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"catatan\": \"Hasil survey lapangan tidak memenuhi kriteria kelayakan hibah.\"\n}"
             }
           }
@@ -869,10 +1194,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -908,10 +1236,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -928,10 +1259,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -948,11 +1282,17 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/tolak",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/laporan/tolak",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -964,7 +1304,11 @@
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"catatan_admin\": \"Laporan tidak sesuai template. Mohon lengkapi bagian dokumentasi kegiatan dan foto pelaksanaan.\"\n}"
             }
           }
@@ -974,10 +1318,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pencairan",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
             },
@@ -989,7 +1336,11 @@
                   "type": "file",
                   "description": "Bukti transfer bank (PDF/JPG, max 10MB)"
                 },
-                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "total_dana",
+                  "value": "30000000",
+                  "type": "text"
+                },
                 {
                   "key": "tanggal_pencairan",
                   "value": "2026-06-01",
@@ -1004,10 +1355,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1024,10 +1378,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pengiriman",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pengiriman",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pengiriman"]
             },
@@ -1050,6 +1407,42 @@
                   "type": "text"
                 }
               ]
+            }
+          }
+        },
+        {
+          "name": "🧭 Ubah Status Timeline (Flexible)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/timeline/status",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengajuan",
+                "{{pengajuan_id}}",
+                "timeline",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"step\": \"PEMERIKSAAN\",\n  \"status\": \"COMPLETED\"\n}"
             }
           }
         }
@@ -1076,10 +1469,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/revisi/pentas",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/revisi/pentas",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "revisi", "pentas"]
             },
@@ -1112,17 +1508,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/batal",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/batal",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "batal"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"alasan\": \"Test batalkan sebelum ditolak\"\n}"
             }
           }
@@ -1144,10 +1550,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/laporan",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
             },
@@ -1180,11 +1589,17 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/survey/tolak",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1196,7 +1611,11 @@
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"catatan\": \"Tes invalid sequence: survey belum dibuat\"\n}"
             }
           }
@@ -1218,10 +1637,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pencairan",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
             },
@@ -1233,7 +1655,11 @@
                   "type": "file",
                   "description": "Isi file untuk memicu validasi alur"
                 },
-                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "total_dana",
+                  "value": "30000000",
+                  "type": "text"
+                },
                 {
                   "key": "tanggal_pencairan",
                   "value": "2026-06-01",
@@ -1260,10 +1686,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pengiriman",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pengiriman",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pengiriman"]
             },
@@ -1299,10 +1728,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/notifikasi",
+              "raw": "{{base_url}}/notifikasi",
               "host": ["{{base_url}}"],
               "path": ["notifikasi"]
             }
@@ -1312,11 +1744,80 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 200) {",
-                  "  const res = pm.response.json();",
-                  "  if (res.length > 0) {",
-                  "    pm.collectionVariables.set('notifikasi_id', res[0].notifikasi_id);",
-                  "  }",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const items = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);",
+                  "if (items.length > 0) {",
+                  "  pm.collectionVariables.set('notifikasi_id', items[0].notifikasi_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Notifikasi Admin (cek sender info)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifikasi",
+              "host": ["{{base_url}}"],
+              "path": ["notifikasi"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const items = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);",
+                  "pm.test('Response data notifikasi berupa array', () => pm.expect(Array.isArray(items)).to.eql(true));",
+                  "if (items.length > 0) {",
+                  "  const hasSender = items.some(n => (n.judul || '').includes('Dari:') && (n.pesan || '').includes('(Dari:'));",
+                  "  pm.test('Notifikasi admin memuat info pengirim di judul & pesan', () => pm.expect(hasSender).to.eql(true));",
+                  "  pm.collectionVariables.set('notifikasi_id', items[0].notifikasi_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Notifikasi Super Admin (cek sender info)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifikasi",
+              "host": ["{{base_url}}"],
+              "path": ["notifikasi"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const items = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);",
+                  "pm.test('Response data notifikasi berupa array', () => pm.expect(Array.isArray(items)).to.eql(true));",
+                  "if (items.length > 0) {",
+                  "  const hasSender = items.some(n => (n.judul || '').includes('Dari:') && (n.pesan || '').includes('(Dari:'));",
+                  "  pm.test('Notifikasi super admin memuat info pengirim di judul & pesan', () => pm.expect(hasSender).to.eql(true));",
                   "}"
                 ]
               }
@@ -1328,10 +1829,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/notifikasi/{{notifikasi_id}}/baca",
+              "raw": "{{base_url}}/notifikasi/{{notifikasi_id}}/baca",
               "host": ["{{base_url}}"],
               "path": ["notifikasi", "{{notifikasi_id}}", "baca"]
             }
@@ -1342,10 +1846,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/notifikasi/baca-semua",
+              "raw": "{{base_url}}/notifikasi/baca-semua",
               "host": ["{{base_url}}"],
               "path": ["notifikasi", "baca-semua"]
             }
@@ -1361,15 +1868,24 @@
           "name": "1. Register User Pentas",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/register",
+              "raw": "{{base_url}}/auth/register",
               "host": ["{{base_url}}"],
               "path": ["auth", "register"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"first_name\": \"Sari\",\n  \"last_name\": \"Dewi\",\n  \"address\": \"Jl. Pahlawan No. 10, Yogyakarta\",\n  \"email\": \"sari.dewi@sanggar.com\",\n  \"no_telp\": \"082345678901\",\n  \"password\": \"TestUser123!\",\n  \"confirm_password\": \"TestUser123!\"\n}"
             }
           },
@@ -1393,17 +1909,27 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/lembaga",
+              "raw": "{{base_url}}/lembaga",
               "host": ["{{base_url}}"],
               "path": ["lembaga"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"nama_lembaga\": \"Sanggar Dewi Nusantara\",\n  \"jenis_kesenian\": \"Sanggar\",\n  \"alamat\": \"Jl. Pahlawan No. 10, Yogyakarta\",\n  \"no_hp\": \"082345678901\",\n  \"email\": \"dewi.nusantara@email.com\"\n}"
             }
           },
@@ -1426,17 +1952,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/pentas",
+              "raw": "{{base_url}}/pengajuan/pentas",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "pentas"]
             },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "proposal_file", "type": "file" },
+                {
+                  "key": "proposal_file",
+                  "type": "file"
+                },
                 {
                   "key": "jenis_kegiatan",
                   "value": "Pentas Seni",
@@ -1509,15 +2041,24 @@
           "name": "4. Login Admin",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
+              "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
             }
           },
@@ -1540,17 +2081,27 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/setujui",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/setujui",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "setujui"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"paket_id\": \"b2c3d4e5-f6a7-4b8c-9d0e-f1a2b3c4d5e6\",\n  \"catatan\": \"Data lengkap. Paket A (Rp 30.000.000) ditetapkan.\"\n}"
             }
           }
@@ -1560,10 +2111,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1575,7 +2129,10 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "surat_file", "type": "file" },
+                {
+                  "key": "surat_file",
+                  "type": "file"
+                },
                 {
                   "key": "nomor_surat",
                   "value": "SP/DISBUD/2026/001",
@@ -1595,10 +2152,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/surat-persetujuan/konfirmasi",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1614,15 +2174,24 @@
           "name": "8. Login User Kembali",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
+              "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"sari.dewi@sanggar.com\",\n  \"password\": \"TestUser123!\"\n}"
             }
           },
@@ -1645,16 +2214,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/pengajuan/{{pengajuan_id}}/laporan",
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/laporan",
               "host": ["{{base_url}}"],
               "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
             },
             "body": {
               "mode": "formdata",
-              "formdata": [{ "key": "file_laporan", "type": "file" }]
+              "formdata": [
+                {
+                  "key": "file_laporan",
+                  "type": "file"
+                }
+              ]
             }
           }
         },
@@ -1662,15 +2239,24 @@
           "name": "10. Login Admin Lagi",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
+              "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
-              "options": { "raw": { "language": "json" } },
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
               "raw": "{\n  \"email\": \"superadmin@fasilitasi.go.id\",\n  \"password\": \"SuperAdmin@2026!\"\n}"
             }
           },
@@ -1691,10 +2277,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/laporan/setujui",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1711,18 +2300,28 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pencairan",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan", "{{pengajuan_id}}", "pencairan"]
             },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "bukti_transfer", "type": "file" },
-                { "key": "total_dana", "value": "30000000", "type": "text" },
+                {
+                  "key": "bukti_transfer",
+                  "type": "file"
+                },
+                {
+                  "key": "total_dana",
+                  "value": "30000000",
+                  "type": "text"
+                },
                 {
                   "key": "tanggal_pencairan",
                   "value": "2026-09-01",
@@ -1737,10 +2336,13 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
+              "raw": "{{base_url}}/admin/pengajuan/{{pengajuan_id}}/pencairan/selesai",
               "host": ["{{base_url}}"],
               "path": [
                 "admin",
@@ -1748,6 +2350,326 @@
                 "{{pengajuan_id}}",
                 "pencairan",
                 "selesai"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗂️ Admin — Fasilitasi",
+      "item": [
+        {
+          "name": "Daftar Jenis + Paket (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi"]
+            }
+          }
+        },
+        {
+          "name": "Tambah Paket Fasilitasi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi/1/paket",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi", "1", "paket"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"nama_paket\": \"Paket A Baru\",\n  \"kuota\": 10,\n  \"nilai_bantuan\": \"30000000\",\n  \"catatan\": \"Hasil update koleksi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Paket Fasilitasi",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi", "paket", "{{paket_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"kuota\": 25,\n  \"catatan\": \"Kuota diperbarui\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Hapus Paket Fasilitasi",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi", "paket", "{{paket_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Upload Template Proposal (jenis_id)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi/1/template/proposal",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi", "1", "template", "proposal"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Template proposal (PDF/JPG/PNG)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Template Laporan (jenis_id)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/fasilitasi/1/template/laporan",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "fasilitasi", "1", "template", "laporan"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Template laporan (PDF/JPG/PNG)"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Admin — Pengaturan Akun (SUPER_ADMIN)",
+      "item": [
+        {
+          "name": "Daftar Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengaturan-akun", "admins"]
+            }
+          }
+        },
+        {
+          "name": "Detail Admin by user_id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins/{{admin_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengaturan-akun",
+                "admins",
+                "{{admin_user_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buat Admin Baru",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengaturan-akun", "admins"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"first_name\": \"Admin\",\n  \"last_name\": \"Baru\",\n  \"address\": \"Jl. Malioboro No. 10\",\n  \"email\": \"admin.baru@example.com\",\n  \"no_telp\": \"081234567890\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins/{{admin_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengaturan-akun",
+                "admins",
+                "{{admin_user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"first_name\": \"Admin Update\",\n  \"no_telp\": \"089999999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins/{{admin_user_id}}/reset-password",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengaturan-akun",
+                "admins",
+                "{{admin_user_id}}",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"new_password\": \"NewPassword123!\",\n  \"confirm_new_password\": \"NewPassword123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Hapus Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins/{{admin_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "pengaturan-akun",
+                "admins",
+                "{{admin_user_id}}"
               ]
             }
           }
