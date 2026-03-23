@@ -49,6 +49,12 @@ export class AdminPengajuanController {
 
   // ── List & Detail ─────────────────────────────────────────────────────────
 
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Ringkasan beranda admin/super admin' })
+  getDashboard(@Query() filter: FilterPengajuanDto) {
+    return this.service.getDashboard(filter);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Daftar semua pengajuan (dengan filter)' })
   findAll(@Query() filter: FilterPengajuanDto) {

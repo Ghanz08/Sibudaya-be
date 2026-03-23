@@ -36,6 +36,10 @@ export class AdminPengajuanService {
 
   // ── List & Detail ─────────────────────────────────────────────────────────
 
+  async getDashboard(filter: FilterPengajuanDto) {
+    return this.queryService.getDashboard(filter);
+  }
+
   findAll(filter: FilterPengajuanDto) {
     return this.queryService.findAll(filter);
   }

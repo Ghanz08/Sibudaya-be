@@ -123,21 +123,12 @@ export class UpdateAdminAccountDto {
 }
 
 export class ResetAdminPasswordDto {
-  @ApiProperty({
-    example: 'AdminBaru123!',
-    description: 'Password baru untuk admin',
+  @ApiPropertyOptional({
+    example: 'Reset menggunakan ADMIN_DEFAULT_PASSWORD dari env',
+    description:
+      'Endpoint reset password tidak membutuhkan body. Password akan direset ke ADMIN_DEFAULT_PASSWORD.',
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Password baru wajib diisi' })
-  @MinLength(8, { message: 'Password minimal 8 karakter' })
-  @MaxLength(64, { message: 'Password maksimal 64 karakter' })
-  new_password: string;
-
-  @ApiProperty({
-    example: 'AdminBaru123!',
-    description: 'Konfirmasi password baru',
-  })
-  @IsString()
-  @IsNotEmpty({ message: 'Konfirmasi password wajib diisi' })
-  confirm_new_password: string;
+  note?: string;
 }

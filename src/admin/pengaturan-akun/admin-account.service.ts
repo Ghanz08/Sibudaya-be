@@ -4,11 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   CreateAdminAccountDto,
-  ResetAdminPasswordDto,
   UpdateAdminAccountDto,
 } from './dto/admin-account.dto';
 
@@ -16,7 +16,10 @@ import {
 export class AdminAccountService {
   private readonly SALT_ROUNDS = 12;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   private readonly adminSelect = {
     user_id: true,
@@ -36,6 +39,27 @@ export class AdminAccountService {
       select: this.adminSelect,
       orderBy: { created_at: 'desc' },
     });
+  }
+
+  async getAdminsSummary() {
+    const [total_admin, local_admin, latest_admins] = await Promise.all([
+      this.prisma.users.count({ where: { role: 'ADMIN' } }),
+      this.prisma.users.count({ where: { role: 'ADMIN', provider: 'LOCAL' } }),
+      this.prisma.users.findMany({
+        where: { role: 'ADMIN' },
+        select: this.adminSelect,
+        orderBy: { created_at: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    return {
+      statistik: {
+        total_admin,
+        local_admin,
+      },
+      admin_terbaru: latest_admins.map((admin) => this.toAdminResponse(admin)),
+    };
   }
 
   async findAdminById(userId: string) {
@@ -137,16 +161,20 @@ export class AdminAccountService {
     };
   }
 
-  async resetAdminPassword(userId: string, dto: ResetAdminPasswordDto) {
+  async resetAdminPassword(userId: string) {
     await this.findAdminOrThrow(userId);
 
-    if (dto.new_password !== dto.confirm_new_password) {
+    const defaultPassword = this.configService
+      .get<string>('ADMIN_DEFAULT_PASSWORD')
+      ?.trim();
+
+    if (!defaultPassword) {
       throw new BadRequestException(
-        'Password baru dan konfirmasi password baru tidak cocok',
+        'Konfigurasi ADMIN_DEFAULT_PASSWORD belum diset',
       );
     }
 
-    const password_hash = await bcrypt.hash(dto.new_password, this.SALT_ROUNDS);
+    const password_hash = await bcrypt.hash(defaultPassword, this.SALT_ROUNDS);
 
     await this.prisma.users.update({
       where: { user_id: userId },

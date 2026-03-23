@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsInt,
   IsIn,
   ValidateIf,
   IsNotEmpty,
@@ -170,6 +171,39 @@ export class FilterPengajuanDto {
   status?: string;
 
   @ApiPropertyOptional({ example: '1' })
+  @Type(() => Number)
+  @IsNumber()
   @IsOptional()
   jenis_fasilitasi_id?: number;
+
+  @ApiPropertyOptional({ example: 'sanggar trihuwana' })
+  @IsString()
+  @IsOptional()
+  search?: string;
+
+  @ApiPropertyOptional({ example: 'tanggal_pengajuan' })
+  @IsIn(['tanggal_pengajuan', 'nama_lembaga', 'status'])
+  @IsString()
+  @IsOptional()
+  sort_by?: 'tanggal_pengajuan' | 'nama_lembaga' | 'status';
+
+  @ApiPropertyOptional({ example: 'desc' })
+  @IsIn(['asc', 'desc'])
+  @IsString()
+  @IsOptional()
+  sort_order?: 'asc' | 'desc';
+
+  @ApiPropertyOptional({ example: 1 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @ApiPropertyOptional({ example: 10 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  limit?: number;
 }
