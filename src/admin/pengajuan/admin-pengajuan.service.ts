@@ -1,14 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UploadService } from '../../common/upload/upload.service';
-import { STATUS } from '../../common/constants/status.constants';
-import { AdminPengajuanAssertionService } from './services/admin-pengajuan-assertion.service';
-import { AdminPengajuanNotifierService } from './services/admin-pengajuan-notifier.service';
+import { Injectable } from '@nestjs/common';
 import { AdminPengajuanQueryService } from './services/admin-pengajuan-query.service';
+import { AdminPengajuanPemeriksaanService } from './services/admin-pengajuan-pemeriksaan.service';
+import { AdminPengajuanSurveyService } from './services/admin-pengajuan-survey.service';
+import { AdminPengajuanSuratService } from './services/admin-pengajuan-surat.service';
+import { AdminPengajuanLaporanService } from './services/admin-pengajuan-laporan.service';
+import { AdminPengajuanPencairanService } from './services/admin-pengajuan-pencairan.service';
+import { AdminPengajuanPengirimanService } from './services/admin-pengajuan-pengiriman.service';
 import { AdminPengajuanTimelineService } from './services/admin-pengajuan-timeline.service';
 import {
   FilterPengajuanDto,
@@ -23,14 +20,21 @@ import {
   UploadSuratPersetujuanDto,
 } from './dto/admin-pengajuan.dto';
 
+/**
+ * Facade service for AdminPengajuan workflow operations.
+ * Delegates to specialized workflow services: pemeriksaan, survey, surat, laporan,
+ * pencairan (pentas), pengiriman (hibah), and timeline.
+ */
 @Injectable()
 export class AdminPengajuanService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly uploadService: UploadService,
     private readonly queryService: AdminPengajuanQueryService,
-    private readonly assertionService: AdminPengajuanAssertionService,
-    private readonly notifierService: AdminPengajuanNotifierService,
+    private readonly pemeriksaanService: AdminPengajuanPemeriksaanService,
+    private readonly surveyService: AdminPengajuanSurveyService,
+    private readonly suratService: AdminPengajuanSuratService,
+    private readonly laporanService: AdminPengajuanLaporanService,
+    private readonly pencairanService: AdminPengajuanPencairanService,
+    private readonly pengirimanService: AdminPengajuanPengirimanService,
     private readonly timelineService: AdminPengajuanTimelineService,
   ) {}
 
@@ -51,36 +55,7 @@ export class AdminPengajuanService {
   // ── Step 2: Pemeriksaan ───────────────────────────────────────────────────
 
   async setujuiPemeriksaan(pengajuanId: string, dto: SetujuiPemeriksaanDto) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
-      throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
-    }
-
-    // Pentas wajib ada paket_id
-    if (pengajuan.jenis_fasilitasi_id === 1 && !dto.paket_id) {
-      throw new BadRequestException(
-        'Penetapan paket fasilitasi wajib diisi untuk Fasilitasi Pentas',
-      );
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const updated = await this.prisma.pengajuan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: {
-        status_pemeriksaan: STATUS.DISETUJUI,
-        catatan_pemeriksaan: dto.catatan,
-        paket_id: dto.paket_id ?? null,
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Pemeriksaan Pengajuan Disetujui',
-      'Data pengajuan Anda telah diverifikasi dan dinyatakan sesuai ketentuan. Silakan tunggu informasi selanjutnya.',
-    );
-
-    return updated;
+    return this.pemeriksaanService.setujui(pengajuanId, dto);
   }
 
   async tolakPemeriksaan(
@@ -88,136 +63,21 @@ export class AdminPengajuanService {
     dto: TolakPemeriksaanDto,
     suratFile?: Express.Multer.File,
   ) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
-      throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
-    }
-
-    const rejectionNote = dto.catatan_pemeriksaan?.trim();
-    if (!rejectionNote) {
-      throw new BadRequestException('Alasan penolakan wajib diisi');
-    }
-
-    let suratPath: string | undefined;
-    if (suratFile) {
-      suratPath = this.uploadService.buildFilePath(
-        suratFile.destination.replace(process.cwd() + '/', ''),
-        suratFile.filename,
-      );
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const updated = await this.prisma.pengajuan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: {
-        status_pemeriksaan: STATUS.DITOLAK,
-        status: STATUS.DALAM_PROSES,
-        catatan_pemeriksaan: rejectionNote,
-        ...(suratPath && { surat_penolakan_file: suratPath }),
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Pengajuan Ditolak',
-      `Pemeriksaan data pengajuan ditolak. Silakan perbarui pengajuan atau batalkan pengajuan. ${rejectionNote}`.trim(),
-    );
-
-    return updated;
+    return this.pemeriksaanService.tolak(pengajuanId, dto, suratFile);
   }
 
   // ── Step 3 Hibah: Survey Lapangan ─────────────────────────────────────────
 
   async setSurvey(pengajuanId: string, dto: SetSurveyDto) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisHibah(pengajuan);
-    this.assertPemeriksaanDisetujui(pengajuan);
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const survey = await this.prisma.survey_lapangan.upsert({
-      where: { pengajuan_id: pengajuanId },
-      create: {
-        pengajuan_id: pengajuanId,
-        tanggal_survey: new Date(dto.tanggal_survey),
-        status: STATUS.DALAM_PROSES,
-        catatan: dto.catatan,
-      },
-      update: {
-        tanggal_survey: new Date(dto.tanggal_survey),
-        catatan: dto.catatan,
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Jadwal Survey Lapangan Ditetapkan',
-      `Dinas Kebudayaan DIY akan melakukan survey lapangan pada ${dto.tanggal_survey}. Pastikan Anda dapat hadir pada tanggal tersebut.`,
-    );
-
-    return survey;
+    return this.surveyService.set(pengajuanId, dto);
   }
 
   async selesaikanSurvey(pengajuanId: string) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisHibah(pengajuan);
-
-    if (!pengajuan.survey_lapangan) {
-      throw new BadRequestException(
-        'Tanggal survey belum ditetapkan oleh admin',
-      );
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const survey = await this.prisma.survey_lapangan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: { status: STATUS.SELESAI },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Survey Lapangan Selesai',
-      'Survey lapangan telah dilaksanakan. Proses selanjutnya akan segera diinformasikan.',
-    );
-
-    return survey;
+    return this.surveyService.selesai(pengajuanId);
   }
 
   async tolakSurvey(pengajuanId: string, dto: TolakSurveyDto) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisHibah(pengajuan);
-
-    if (!pengajuan.survey_lapangan) {
-      throw new BadRequestException(
-        'Tanggal survey belum ditetapkan oleh admin',
-      );
-    }
-    if (pengajuan.survey_lapangan.status === STATUS.DITOLAK) {
-      throw new BadRequestException('Survey lapangan sudah ditolak');
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    await this.prisma.$transaction([
-      this.prisma.survey_lapangan.update({
-        where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.DITOLAK, catatan: dto.catatan },
-      }),
-      this.prisma.pengajuan.update({
-        where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.DITOLAK },
-      }),
-    ]);
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Survey Lapangan Ditolak',
-      `Pengajuan hibah tidak dapat dilanjutkan karena hasil survey lapangan ditolak. ${dto.catatan}`,
-    );
-
-    return { message: 'Survey lapangan ditolak dan pengajuan dihentikan' };
+    return this.surveyService.tolak(pengajuanId, dto);
   }
 
   // ── Step: Surat Persetujuan (upload) ─────────────────────────────────────
@@ -227,164 +87,21 @@ export class AdminPengajuanService {
     dto: UploadSuratPersetujuanDto,
     file: Express.Multer.File,
   ) {
-    if (!file)
-      throw new BadRequestException('File surat persetujuan wajib diunggah');
-
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertPemeriksaanDisetujui(pengajuan);
-
-    // For Hibah: survey must be SELESAI first
-    if (
-      pengajuan.jenis_fasilitasi_id === 2 &&
-      pengajuan.survey_lapangan?.status !== 'SELESAI'
-    ) {
-      throw new BadRequestException('Survey lapangan belum selesai');
-    }
-
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
-    );
-
-    // delete old file if re-uploading
-    if (pengajuan.surat_persetujuan?.file_path) {
-      this.uploadService.deleteFile(pengajuan.surat_persetujuan.file_path);
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const surat = await this.prisma.surat_persetujuan.upsert({
-      where: { pengajuan_id: pengajuanId },
-      create: {
-        pengajuan_id: pengajuanId,
-        nomor_surat: dto.nomor_surat,
-        file_path: filePath,
-        tanggal_terbit: new Date(dto.tanggal_terbit),
-        status: STATUS.DALAM_PROSES,
-      },
-      update: {
-        nomor_surat: dto.nomor_surat,
-        file_path: filePath,
-        tanggal_terbit: new Date(dto.tanggal_terbit),
-        status: STATUS.DALAM_PROSES,
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Surat Persetujuan Tersedia',
-      'Surat persetujuan telah diterbitkan. Silakan unduh dan lakukan penandatanganan secara langsung di Kantor Dinas Kebudayaan DIY.',
-    );
-
-    return surat;
+    return this.suratService.upload(pengajuanId, dto, file);
   }
 
   async konfirmasiSuratPersetujuan(pengajuanId: string) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-
-    if (!pengajuan.surat_persetujuan) {
-      throw new BadRequestException('Surat persetujuan belum diunggah');
-    }
-    if (pengajuan.surat_persetujuan.status === STATUS.SELESAI) {
-      throw new BadRequestException('Surat persetujuan sudah dikonfirmasi');
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const surat = await this.prisma.surat_persetujuan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: {
-        status: STATUS.SELESAI,
-        tanggal_konfirmasi: new Date(),
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Surat Persetujuan Dikonfirmasi',
-      'Penandatanganan surat persetujuan telah dikonfirmasi di Kantor Dinas Kebudayaan DIY.',
-    );
-
-    return surat;
+    return this.suratService.konfirmasi(pengajuanId);
   }
 
   // ── Step: Laporan Kegiatan (admin actions) ────────────────────────────────
 
   async setujuiLaporan(pengajuanId: string) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-
-    if (!pengajuan.laporan_kegiatan) {
-      throw new BadRequestException(
-        'Pemohon belum mengunggah laporan kegiatan',
-      );
-    }
-    if (pengajuan.laporan_kegiatan.status !== STATUS.DALAM_PROSES) {
-      throw new BadRequestException('Laporan sudah diproses sebelumnya');
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    await this.prisma.laporan_kegiatan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: { status: STATUS.DISETUJUI },
-    });
-
-    // For Pentas: create pencairan_dana record; for Hibah: mark pengajuan SELESAI
-    if (pengajuan.jenis_fasilitasi_id === 1) {
-      await this.prisma.pencairan_dana.upsert({
-        where: { pengajuan_id: pengajuanId },
-        create: { pengajuan_id: pengajuanId, status: STATUS.DALAM_PROSES },
-        update: {},
-      });
-
-      await this.kirimNotifikasiUserDanSuperAdmin(
-        userId,
-        'Laporan Kegiatan Disetujui',
-        'Laporan kegiatan Anda telah diverifikasi. Proses pencairan dana akan segera dilakukan.',
-      );
-    } else {
-      // Hibah — selesai
-      await this.prisma.pengajuan.update({
-        where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.SELESAI },
-      });
-
-      await this.kirimNotifikasiUserDanSuperAdmin(
-        userId,
-        'Pengajuan Selesai',
-        'Laporan kegiatan telah diverifikasi. Proses fasilitasi hibah Anda dinyatakan selesai.',
-      );
-    }
-
-    return { message: 'Laporan disetujui' };
+    return this.laporanService.setujui(pengajuanId);
   }
 
   async tolakLaporan(pengajuanId: string, dto: TolakLaporanDto) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-
-    if (!pengajuan.laporan_kegiatan) {
-      throw new BadRequestException(
-        'Pemohon belum mengunggah laporan kegiatan',
-      );
-    }
-    if (pengajuan.laporan_kegiatan.status !== STATUS.DALAM_PROSES) {
-      throw new BadRequestException('Laporan sudah diproses sebelumnya');
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    await this.prisma.laporan_kegiatan.update({
-      where: { pengajuan_id: pengajuanId },
-      data: { status: STATUS.DITOLAK, catatan_admin: dto.catatan_admin },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Laporan Kegiatan Ditolak',
-      `Laporan kegiatan Anda perlu diperbaiki. Alasan: ${dto.catatan_admin}`,
-    );
-
-    return { message: 'Laporan ditolak' };
+    return this.laporanService.tolak(pengajuanId, dto);
   }
 
   // ── Step Pentas: Pencairan Dana ───────────────────────────────────────────
@@ -394,83 +111,11 @@ export class AdminPengajuanService {
     dto: UploadBuktiPencairanDto,
     file: Express.Multer.File,
   ) {
-    if (!file)
-      throw new BadRequestException('File bukti transfer wajib diunggah');
-
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisPentas(pengajuan);
-
-    if (!pengajuan.pencairan_dana) {
-      throw new BadRequestException(
-        'Tahap pencairan dana belum dibuka. Laporan kegiatan harus disetujui terlebih dahulu.',
-      );
-    }
-    if (pengajuan.pencairan_dana.status !== STATUS.DALAM_PROSES) {
-      throw new BadRequestException('Bukti transfer sudah diunggah');
-    }
-    if (pengajuan.pencairan_dana.bukti_transfer) {
-      throw new BadRequestException('Bukti transfer sudah diunggah');
-    }
-
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
-    );
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const pencairan = await this.prisma.pencairan_dana.update({
-      where: { pengajuan_id: pengajuanId },
-      data: {
-        bukti_transfer: filePath,
-        total_dana: dto.total_dana,
-        tanggal_pencairan: new Date(dto.tanggal_pencairan),
-        status: STATUS.DALAM_PROSES,
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Bukti Pencairan Dana Diunggah',
-      'Bukti transfer dana fasilitasi telah diunggah oleh Dinas. Mohon menunggu konfirmasi penyelesaian.',
-    );
-
-    return pencairan;
+    return this.pencairanService.uploadBukti(pengajuanId, dto, file);
   }
 
   async selesaikanPencairan(pengajuanId: string) {
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisPentas(pengajuan);
-
-    if (
-      pengajuan.pencairan_dana?.status !== STATUS.DALAM_PROSES ||
-      !pengajuan.pencairan_dana?.bukti_transfer
-    ) {
-      throw new BadRequestException(
-        'Bukti transfer belum diunggah atau pencairan sudah selesai',
-      );
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    await this.prisma.$transaction([
-      this.prisma.pencairan_dana.update({
-        where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.SELESAI },
-      }),
-      this.prisma.pengajuan.update({
-        where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.SELESAI },
-      }),
-    ]);
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Pencairan Dana Selesai',
-      'Dana fasilitasi telah dicairkan ke rekening lembaga budaya Anda. Proses fasilitasi pentas dinyatakan selesai.',
-    );
-
-    return { message: 'Pencairan dana selesai' };
+    return this.pencairanService.selesai(pengajuanId);
   }
 
   // ── Step Hibah: Pengiriman Sarana ─────────────────────────────────────────
@@ -480,56 +125,7 @@ export class AdminPengajuanService {
     dto: UploadBuktiPengirimanDto,
     file: Express.Multer.File,
   ) {
-    if (!file)
-      throw new BadRequestException('File bukti pengiriman wajib diunggah');
-
-    const pengajuan = await this.findDetailOrThrow(pengajuanId);
-    this.assertJenisHibah(pengajuan);
-
-    if (pengajuan.surat_persetujuan?.status !== STATUS.SELESAI) {
-      throw new BadRequestException(
-        'Surat persetujuan belum dikonfirmasi. Pengiriman sarana belum bisa dilakukan.',
-      );
-    }
-
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
-    );
-
-    // delete old if re-uploading
-    if (pengajuan.pengiriman_sarana?.bukti_pengiriman) {
-      this.uploadService.deleteFile(
-        pengajuan.pengiriman_sarana.bukti_pengiriman,
-      );
-    }
-
-    const userId = pengajuan.lembaga_budaya.user_id;
-
-    const pengiriman = await this.prisma.pengiriman_sarana.upsert({
-      where: { pengajuan_id: pengajuanId },
-      create: {
-        pengajuan_id: pengajuanId,
-        tanggal_pengiriman: new Date(dto.tanggal_pengiriman),
-        bukti_pengiriman: filePath,
-        catatan: dto.catatan,
-        status: STATUS.SELESAI,
-      },
-      update: {
-        tanggal_pengiriman: new Date(dto.tanggal_pengiriman),
-        bukti_pengiriman: filePath,
-        catatan: dto.catatan,
-        status: STATUS.SELESAI,
-      },
-    });
-
-    await this.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      'Sarana Prasarana Dikirim',
-      'Fasilitas hibah telah dikirim oleh Dinas Kebudayaan DIY ke alamat yang terdaftar.',
-    );
-
-    return pengiriman;
+    return this.pengirimanService.uploadBukti(pengajuanId, dto, file);
   }
 
   // ── Flexible Timeline Status (admin override) ────────────────────────────
@@ -539,41 +135,5 @@ export class AdminPengajuanService {
     dto: UpdateTimelineStatusDto,
   ) {
     return this.timelineService.updateTimelineStatus(pengajuanId, dto);
-  }
-
-  // ── Private Helpers ───────────────────────────────────────────────────────
-
-  private async findDetailOrThrow(pengajuanId: string) {
-    return this.queryService.findDetailOrThrow(pengajuanId);
-  }
-
-  private assertPemeriksaanDisetujui(
-    pengajuan: Awaited<ReturnType<AdminPengajuanService['findDetailOrThrow']>>,
-  ) {
-    this.assertionService.assertPemeriksaanDisetujui(pengajuan);
-  }
-
-  private assertJenisPentas(
-    pengajuan: Awaited<ReturnType<AdminPengajuanService['findDetailOrThrow']>>,
-  ) {
-    this.assertionService.assertJenisPentas(pengajuan);
-  }
-
-  private assertJenisHibah(
-    pengajuan: Awaited<ReturnType<AdminPengajuanService['findDetailOrThrow']>>,
-  ) {
-    this.assertionService.assertJenisHibah(pengajuan);
-  }
-
-  private async kirimNotifikasiUserDanSuperAdmin(
-    userId: string,
-    judul: string,
-    pesan: string,
-  ) {
-    await this.notifierService.kirimNotifikasiUserDanSuperAdmin(
-      userId,
-      judul,
-      pesan,
-    );
   }
 }

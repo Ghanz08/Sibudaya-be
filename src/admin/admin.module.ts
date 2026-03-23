@@ -9,6 +9,12 @@ import { AdminPengajuanAssertionService } from './pengajuan/services/admin-penga
 import { AdminPengajuanNotifierService } from './pengajuan/services/admin-pengajuan-notifier.service';
 import { AdminPengajuanQueryService } from './pengajuan/services/admin-pengajuan-query.service';
 import { AdminPengajuanTimelineService } from './pengajuan/services/admin-pengajuan-timeline.service';
+import { AdminPengajuanPemeriksaanService } from './pengajuan/services/admin-pengajuan-pemeriksaan.service';
+import { AdminPengajuanSurveyService } from './pengajuan/services/admin-pengajuan-survey.service';
+import { AdminPengajuanSuratService } from './pengajuan/services/admin-pengajuan-surat.service';
+import { AdminPengajuanLaporanService } from './pengajuan/services/admin-pengajuan-laporan.service';
+import { AdminPengajuanPencairanService } from './pengajuan/services/admin-pengajuan-pencairan.service';
+import { AdminPengajuanPengirimanService } from './pengajuan/services/admin-pengajuan-pengiriman.service';
 
 @Module({
   controllers: [
@@ -22,6 +28,12 @@ import { AdminPengajuanTimelineService } from './pengajuan/services/admin-pengaj
     AdminPengajuanAssertionService,
     AdminPengajuanNotifierService,
     AdminPengajuanTimelineService,
+    AdminPengajuanPemeriksaanService,
+    AdminPengajuanSurveyService,
+    AdminPengajuanSuratService,
+    AdminPengajuanLaporanService,
+    AdminPengajuanPencairanService,
+    AdminPengajuanPengirimanService,
     AdminFasilitasiService,
     AdminAccountService,
   ],
