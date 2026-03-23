@@ -1,6 +1,6 @@
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 
 export type UploadFolder =
@@ -21,7 +21,7 @@ export function createDiskStorage(folder: UploadFolder) {
       cb(null, dest);
     },
     filename: (_req, file, cb) => {
-      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      const uniqueName = `${randomUUID()}${extname(file.originalname)}`;
       cb(null, uniqueName);
     },
   });
