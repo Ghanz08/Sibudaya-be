@@ -1,10 +1,16 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import type { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
+
+type CorsCallback = (err: Error | null, allow?: boolean) => void;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('HTTP');
 
   // Aktifkan validasi global (class-validator)
   app.useGlobalPipes(
@@ -15,9 +21,43 @@ async function bootstrap() {
     }),
   );
 
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+    }),
+  );
+
+  app.useGlobalFilters(new GlobalHttpExceptionFilter());
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      logger.log(
+        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
+      );
+    });
+
+    next();
+  });
+
   // CORS
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3001';
+  const allowedOrigins = frontendUrl
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3001',
+    origin: (origin: string | undefined, callback: CorsCallback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Origin not allowed by CORS'));
+    },
     credentials: true,
   });
 
@@ -51,4 +91,4 @@ async function bootstrap() {
   console.log(`\n🚀 Server   : ${await app.getUrl()}`);
   console.log(`📄 Swagger  : ${await app.getUrl()}/api/docs\n`);
 }
-bootstrap();
+void bootstrap();

@@ -16,8 +16,9 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import type { SafeUser } from './auth.service';
+import type { AuthTokens, SafeUser } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -46,6 +47,7 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'Email sudah terdaftar' })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -60,6 +62,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   login(@Req() req: { user: SafeUser }) {
     return this.authService.login(req.user);
   }
@@ -76,6 +79,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'access_token baru' })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   refreshToken(@Body('refresh_token') refreshToken: string) {
     return this.authService.refreshTokens(refreshToken);
   }
@@ -89,6 +93,7 @@ export class AuthController {
   })
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
@@ -97,6 +102,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password berhasil direset' })
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
@@ -111,7 +117,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Callback Google OAuth — mengembalikan JWT tokens' })
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  googleCallback(@Req() req: { user: any }) {
+  googleCallback(@Req() req: { user: AuthTokens }) {
     return req.user;
   }
 
