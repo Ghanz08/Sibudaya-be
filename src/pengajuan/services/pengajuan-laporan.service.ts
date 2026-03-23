@@ -28,7 +28,7 @@ export class PengajuanLaporanService {
       userId,
     );
 
-    await this.assertionService.assertLaporanUnlocked(pengajuan);
+    this.assertionService.assertLaporanUnlocked(pengajuan);
 
     const existing = await this.prisma.laporan_kegiatan.findUnique({
       where: { pengajuan_id: pengajuanId },

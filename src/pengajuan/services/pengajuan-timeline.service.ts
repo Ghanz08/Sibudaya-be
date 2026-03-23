@@ -6,6 +6,21 @@ import {
   TimelineStatus,
 } from '../dto/pengajuan-timeline.dto';
 
+type TimelineNode = {
+  status?: string | null;
+};
+
+type TimelineData = {
+  status: string;
+  jenis_fasilitasi_id: number;
+  status_pemeriksaan?: string | null;
+  survey_lapangan?: TimelineNode | null;
+  surat_persetujuan?: TimelineNode | null;
+  pengiriman_sarana?: TimelineNode | null;
+  laporan_kegiatan?: TimelineNode | null;
+  pencairan_dana?: TimelineNode | null;
+};
+
 @Injectable()
 export class PengajuanTimelineService {
   private normalizeStepStatus(status?: string | null): TimelineStatus {
@@ -16,7 +31,7 @@ export class PengajuanTimelineService {
     return STATUS.DALAM_PROSES;
   }
 
-  buildTimeline(data: any): PengajuanTimelineResponse {
+  buildTimeline(data: TimelineData): PengajuanTimelineResponse {
     const isPentas = data.jenis_fasilitasi_id === 1;
     const pemeriksaanStatus = this.normalizeStepStatus(data.status_pemeriksaan);
     const pemeriksaanRejected = pemeriksaanStatus === STATUS.DITOLAK;

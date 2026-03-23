@@ -21,7 +21,7 @@ export class AdminPengajuanPemeriksaanService {
 
   async setujui(pengajuanId: string, dto: SetujuiPemeriksaanDto) {
     const pengajuan = await this.queryService.findDetailOrThrow(pengajuanId);
-    
+
     if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
     }
@@ -59,7 +59,7 @@ export class AdminPengajuanPemeriksaanService {
     suratFile?: Express.Multer.File,
   ) {
     const pengajuan = await this.queryService.findDetailOrThrow(pengajuanId);
-    
+
     if (pengajuan.status_pemeriksaan !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Pemeriksaan sudah diproses sebelumnya');
     }

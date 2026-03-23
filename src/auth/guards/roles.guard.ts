@@ -5,7 +5,13 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
+import type { SafeUser } from '../auth.service';
 import { ROLES_KEY, Role } from '../decorators/roles.decorator';
+
+type AuthenticatedRequest = Request & {
+  user?: SafeUser;
+};
 
 /**
  * RolesGuard
@@ -31,7 +37,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const { user } = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     if (!user) {
       throw new ForbiddenException('User tidak terautentikasi');

@@ -1,4 +1,12 @@
 import { PengajuanService } from './pengajuan.service';
+import {
+  CreatePengajuanHibahDto,
+  CreatePengajuanPentasDto,
+} from './dto/create-pengajuan.dto';
+import { PengajuanSubmissionService } from './services/pengajuan-submission.service';
+import { PengajuanQueryService } from './services/pengajuan-query.service';
+import { PengajuanLaporanService } from './services/pengajuan-laporan.service';
+import { PengajuanRevisionService } from './services/pengajuan-revision.service';
 
 describe('PengajuanService', () => {
   const userId = 'user-1';
@@ -8,7 +16,7 @@ describe('PengajuanService', () => {
     filename: 'proposal.pdf',
   } as Express.Multer.File;
 
-  const pentasDto = {
+  const pentasDto: CreatePengajuanPentasDto = {
     jenis_kegiatan: 'Pentas Seni',
     judul_kegiatan: 'Pentas Budaya 2026',
     tujuan_kegiatan: 'Pelestarian budaya',
@@ -47,10 +55,10 @@ describe('PengajuanService', () => {
 
     return {
       service: new PengajuanService(
-        submissionService as any,
-        queryService as any,
-        laporanService as any,
-        revisionService as any,
+        submissionService as unknown as PengajuanSubmissionService,
+        queryService as unknown as PengajuanQueryService,
+        laporanService as unknown as PengajuanLaporanService,
+        revisionService as unknown as PengajuanRevisionService,
       ),
       submissionService,
     };
@@ -59,7 +67,7 @@ describe('PengajuanService', () => {
   it('delegates submitPentas to submission service', async () => {
     const { service, submissionService } = createService();
 
-    await service.submitPentas(userId, pentasDto as any, proposalFile);
+    await service.submitPentas(userId, pentasDto, proposalFile);
 
     expect(submissionService.submitPentas).toHaveBeenCalledWith(
       userId,
@@ -70,7 +78,7 @@ describe('PengajuanService', () => {
 
   it('delegates submitHibah to submission service', async () => {
     const { service, submissionService } = createService();
-    const hibahDto = {
+    const hibahDto: CreatePengajuanHibahDto = {
       jenis_kegiatan: 'Gamelan Slendro Pelog',
       nama_penerima: 'Wayan Sujana',
       email_penerima: 'wayan@email.com',
@@ -83,7 +91,7 @@ describe('PengajuanService', () => {
       kode_pos: '55281',
     };
 
-    await service.submitHibah(userId, hibahDto as any, proposalFile);
+    await service.submitHibah(userId, hibahDto, proposalFile);
 
     expect(submissionService.submitHibah).toHaveBeenCalledWith(
       userId,

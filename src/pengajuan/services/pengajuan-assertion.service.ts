@@ -11,7 +11,7 @@ export class PengajuanAssertionService {
     }
   }
 
-  async assertLaporanUnlocked(pengajuan: {
+  assertLaporanUnlocked(pengajuan: {
     jenis_fasilitasi_id: number;
     surat_persetujuan?: { status?: string | null } | null;
     pengiriman_sarana?: { status?: string | null } | null;

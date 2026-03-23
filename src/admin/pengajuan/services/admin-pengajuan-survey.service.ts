@@ -4,10 +4,7 @@ import { STATUS } from '../../../common/constants/status.constants';
 import { AdminPengajuanNotifierService } from './admin-pengajuan-notifier.service';
 import { AdminPengajuanQueryService } from './admin-pengajuan-query.service';
 import { AdminPengajuanAssertionService } from './admin-pengajuan-assertion.service';
-import {
-  SetSurveyDto,
-  TolakSurveyDto,
-} from '../dto/admin-pengajuan.dto';
+import { SetSurveyDto, TolakSurveyDto } from '../dto/admin-pengajuan.dto';
 
 /** Handles Survey Lapangan workflow (Step 3, Hibah only) */
 @Injectable()

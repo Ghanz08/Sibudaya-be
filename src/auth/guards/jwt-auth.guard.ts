@@ -1,9 +1,6 @@
-import {
-  Injectable,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import type { SafeUser } from '../auth.service';
 
 /**
  * JwtAuthGuard
@@ -12,19 +9,29 @@ import { AuthGuard } from '@nestjs/passport';
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  canActivate(context: ExecutionContext) {
-    return super.canActivate(context);
-  }
+  handleRequest<TUser = SafeUser>(
+    err: unknown,
+    user: TUser,
+    info: unknown,
+  ): TUser {
+    void info;
 
-  handleRequest(err: any, user: any) {
-    if (err || !user) {
-      throw (
-        err ??
-        new UnauthorizedException(
-          'Akses ditolak. Token tidak valid atau sudah expired.',
-        )
+    if (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+
+      throw new UnauthorizedException(
+        'Akses ditolak. Token tidak valid atau sudah expired.',
       );
     }
+
+    if (!user) {
+      throw new UnauthorizedException(
+        'Akses ditolak. Token tidak valid atau sudah expired.',
+      );
+    }
+
     return user;
   }
 }

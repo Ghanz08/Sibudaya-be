@@ -25,7 +25,8 @@ describe('CreatePengajuanPentasDto', () => {
   });
 
   it('fails validation when nama_bank is missing', () => {
-    const { nama_bank: _ignored, ...payload } = basePayload;
+    const payload: Partial<typeof basePayload> = { ...basePayload };
+    delete payload.nama_bank;
     const dto = plainToInstance(CreatePengajuanPentasDto, payload);
     const errors = validateSync(dto);
 

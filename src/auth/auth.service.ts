@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -52,17 +53,14 @@ export class AuthService {
   } {
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '15m') as any,
+      expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') ??
+        '15m') as JwtSignOptions['expiresIn'],
     });
 
     const refresh_token = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.get<string>(
-        'JWT_REFRESH_EXPIRES_IN',
-        '7d',
-      ) as any,
+      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ??
+        '7d') as JwtSignOptions['expiresIn'],
     });
 
     return { access_token, refresh_token };
@@ -165,7 +163,7 @@ export class AuthService {
    * Login user. Dipanggil setelah LocalStrategy.validate() berhasil.
    * req.user sudah berisi data user dari validateUser().
    */
-  async login(user: SafeUser): Promise<AuthTokens> {
+  login(user: SafeUser): AuthTokens {
     const payload: JwtPayload = {
       sub: user.user_id,
       email: user.email,
@@ -248,8 +246,8 @@ export class AuthService {
 
     const access_token = this.jwtService.sign(newPayload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '15m') as any,
+      expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') ??
+        '15m') as JwtSignOptions['expiresIn'],
     });
 
     return { access_token };
@@ -307,7 +305,7 @@ export class AuthService {
     let payload: { sub: string; type: string };
 
     try {
-      payload = this.jwtService.verify(token, {
+      payload = this.jwtService.verify<{ sub: string; type: string }>(token, {
         secret: this.configService.getOrThrow<string>('JWT_SECRET'),
       });
     } catch {
@@ -330,7 +328,10 @@ export class AuthService {
     return { message: 'Password berhasil direset' };
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<SafeUser> {
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<SafeUser> {
     if (dto.email) {
       const normalizedEmail = dto.email.trim().toLowerCase();
       const existing = await this.prisma.users.findUnique({
