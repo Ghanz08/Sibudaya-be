@@ -69,6 +69,12 @@ export class UpdatePengajuanPentasDto {
   @MaxLength(255)
   nama_pemegang_rekening?: string;
 
+  @ApiPropertyOptional({ example: 'Bank Mandiri' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  nama_bank?: string;
+
   @ApiPropertyOptional({ example: 'Jl. Malioboro No. 1, Yogyakarta' })
   @IsString()
   @IsOptional()

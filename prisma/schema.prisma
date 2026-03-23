@@ -84,6 +84,7 @@ model pengajuan {
   total_pengajuan_dana Decimal?           @db.Decimal(18, 2)
   nomor_rekening       String?            @db.VarChar(100)
   nama_pemegang_rekening String?          @db.VarChar(255)
+  nama_bank            String?            @db.VarChar(100)
   // Hibah fields
   nama_penerima        String?            @db.VarChar(255)
   alamat_pengiriman    String?

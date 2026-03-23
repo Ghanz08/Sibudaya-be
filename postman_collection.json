@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PAD2 - Fasilitasi Dinas Kebudayaan",
-    "description": "Koleksi endpoint API sistem fasilitasi pentas dan hibah Dinas Kebudayaan DIY.\n\n**Setup:**\n1. Set variable `base_url` → `http://localhost:3000/api/v1`\n2. Jalankan `POST /auth/login` → token USER tersimpan otomatis ke `user_token`\n3. Jalankan `POST /auth/login (Admin)` → token ADMIN tersimpan otomatis ke `admin_token`\n4. Endpoint user pakai `{{user_token}}`, endpoint admin pakai `{{admin_token}}` — tidak perlu ganti token manual",
+    "description": "Koleksi endpoint API sistem fasilitasi pentas dan hibah Dinas Kebudayaan DIY.\n\n**Setup:**\n1. Set variable `base_url` → `http://localhost:3000/api/v1`\n2. Jalankan `POST /auth/login` → token USER tersimpan otomatis ke `user_token`\n3. Jalankan `POST /auth/login (Admin)` → token ADMIN tersimpan otomatis ke `admin_token`\n4. Jalankan `POST /auth/login (Super Admin)` → token SUPER_ADMIN tersimpan otomatis ke `super_admin_token`\n5. Endpoint user pakai `{{user_token}}`, endpoint admin pakai `{{admin_token}}`, endpoint super admin pakai `{{super_admin_token}}`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -682,6 +682,12 @@
                   "type": "text"
                 },
                 {
+                  "key": "nama_bank",
+                  "value": "Bank Mandiri",
+                  "type": "text",
+                  "description": "Nama/label bank dari dropdown frontend"
+                },
+                {
                   "key": "alamat_lembaga",
                   "value": "Jl. Malioboro No. 1, Yogyakarta",
                   "type": "text"
@@ -862,6 +868,12 @@
                   "key": "tujuan_kegiatan",
                   "value": "Revisi tujuan kegiatan sesuai catatan pemeriksaan.",
                   "type": "text"
+                },
+                {
+                  "key": "nama_bank",
+                  "value": "Bank Mandiri Syariah",
+                  "type": "text",
+                  "description": "Opsional: perbarui nama bank"
                 }
               ]
             }
@@ -962,6 +974,52 @@
       "name": "🔧 Admin — Pengajuan",
       "item": [
         {
+          "name": "Dashboard Beranda Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengajuan/dashboard?search=sanggar&sort_by=tanggal_pengajuan&sort_order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengajuan", "dashboard"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "sanggar",
+                  "disabled": true
+                },
+                {
+                  "key": "sort_by",
+                  "value": "tanggal_pengajuan",
+                  "disabled": true,
+                  "description": "tanggal_pengajuan | nama_lembaga | status"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc",
+                  "disabled": true,
+                  "description": "asc | desc"
+                },
+                {
+                  "key": "status",
+                  "value": "DALAM_PROSES",
+                  "disabled": true
+                },
+                {
+                  "key": "jenis_fasilitasi_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Daftar Semua Pengajuan",
           "request": {
             "method": "GET",
@@ -972,7 +1030,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/pengajuan?status=DALAM_PROSES",
+              "raw": "{{base_url}}/admin/pengajuan?status=DALAM_PROSES&page=1&limit=10",
               "host": ["{{base_url}}"],
               "path": ["admin", "pengajuan"],
               "query": [
@@ -986,6 +1044,34 @@
                   "value": "1",
                   "disabled": true,
                   "description": "1=Pentas, 2=Hibah"
+                },
+                {
+                  "key": "search",
+                  "value": "sanggar",
+                  "disabled": true,
+                  "description": "Cari berdasarkan judul_kegiatan atau nama_lembaga"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "tanggal_pengajuan",
+                  "disabled": true,
+                  "description": "tanggal_pengajuan | nama_lembaga | status"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc",
+                  "disabled": true,
+                  "description": "asc | desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": true
                 }
               ]
             }
@@ -2015,6 +2101,12 @@
                   "type": "text"
                 },
                 {
+                  "key": "nama_bank",
+                  "value": "Bank BNI",
+                  "type": "text",
+                  "description": "Nama/label bank dari dropdown frontend"
+                },
+                {
                   "key": "alamat_lembaga",
                   "value": "Jl. Pahlawan No. 10, Yogyakarta",
                   "type": "text"
@@ -2513,13 +2605,30 @@
       "name": "👥 Admin — Pengaturan Akun (SUPER_ADMIN)",
       "item": [
         {
+          "name": "Ringkasan Admin (Dashboard Super Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pengaturan-akun/admins/summary",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pengaturan-akun", "admins", "summary"]
+            }
+          }
+        },
+        {
           "name": "Daftar Admin",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{super_admin_token}}"
               }
             ],
             "url": {
@@ -2536,7 +2645,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{super_admin_token}}"
               }
             ],
             "url": {
@@ -2558,7 +2667,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{super_admin_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2588,7 +2697,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{super_admin_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2617,17 +2726,13 @@
           }
         },
         {
-          "name": "Reset Password Admin",
+          "name": "Reset Password Admin (Default ENV)",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "value": "Bearer {{super_admin_token}}"
               }
             ],
             "url": {
@@ -2640,15 +2745,6 @@
                 "{{admin_user_id}}",
                 "reset-password"
               ]
-            },
-            "body": {
-              "mode": "raw",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              },
-              "raw": "{\n  \"new_password\": \"NewPassword123!\",\n  \"confirm_new_password\": \"NewPassword123!\"\n}"
             }
           }
         },
@@ -2659,7 +2755,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{super_admin_token}}"
               }
             ],
             "url": {

@@ -63,6 +63,7 @@ export class PengajuanService {
         total_pengajuan_dana: dto.total_pengajuan_dana,
         nomor_rekening: dto.nomor_rekening,
         nama_pemegang_rekening: dto.nama_pemegang_rekening,
+        nama_bank: dto.nama_bank,
         alamat_pengiriman: dto.alamat_lembaga,
         proposal_file: proposalPath,
         status: STATUS.DALAM_PROSES,
@@ -265,6 +266,7 @@ export class PengajuanService {
       updateData.nomor_rekening = dto.nomor_rekening;
     if (dto.nama_pemegang_rekening !== undefined)
       updateData.nama_pemegang_rekening = dto.nama_pemegang_rekening;
+    if (dto.nama_bank !== undefined) updateData.nama_bank = dto.nama_bank;
     if (dto.alamat_lembaga !== undefined)
       updateData.alamat_pengiriman = dto.alamat_lembaga;
 

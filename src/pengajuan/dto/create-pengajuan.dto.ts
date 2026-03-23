@@ -69,6 +69,12 @@ export class CreatePengajuanPentasDto {
   @MaxLength(255)
   nama_pemegang_rekening: string;
 
+  @ApiProperty({ example: 'Bank Mandiri' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  nama_bank: string;
+
   @ApiProperty({ example: 'Jl. Malioboro No. 1, Yogyakarta' })
   @IsString()
   @IsNotEmpty()
