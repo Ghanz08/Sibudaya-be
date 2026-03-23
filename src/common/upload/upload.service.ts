@@ -23,4 +23,30 @@ export class UploadService {
   buildFilePath(destination: string, filename: string): string {
     return path.join(destination, filename).replace(/\\/g, '/');
   }
+
+  /**
+   * Build DB path directly from multer file metadata.
+   */
+  buildFilePathFromMulter(file: Express.Multer.File): string {
+    const relativeDestination = path
+      .relative(process.cwd(), file.destination)
+      .replace(/\\/g, '/');
+
+    return this.buildFilePath(relativeDestination, file.filename);
+  }
+
+  /**
+   * Replace an existing file with a newly uploaded multer file.
+   * Returns the new DB path.
+   */
+  replaceFileFromMulter(
+    file: Express.Multer.File,
+    oldFilePath?: string | null,
+  ): string {
+    if (oldFilePath) {
+      this.deleteFile(oldFilePath);
+    }
+
+    return this.buildFilePathFromMulter(file);
+  }
 }

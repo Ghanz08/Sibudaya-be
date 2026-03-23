@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../../generated/prisma/client';
+import {
+  PENGAJUAN_INCLUDE_ADMIN_DETAIL,
+  PENGAJUAN_INCLUDE_ADMIN_LIST,
+} from '../../../common/constants/pengajuan-include.constants';
 import { STATUS } from '../../../common/constants/status.constants';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { FilterPengajuanDto } from '../dto/admin-pengajuan.dto';
@@ -72,11 +76,7 @@ export class AdminPengajuanQueryService {
 
     return this.prisma.pengajuan.findMany({
       where,
-      include: {
-        lembaga_budaya: { include: { sertifikat_nik: true } },
-        jenis_fasilitasi: true,
-        paket_fasilitasi: true,
-      },
+      include: PENGAJUAN_INCLUDE_ADMIN_LIST,
       orderBy,
       skip,
       take,
@@ -91,16 +91,7 @@ export class AdminPengajuanQueryService {
   async findDetailOrThrow(pengajuanId: string) {
     const data = await this.prisma.pengajuan.findUnique({
       where: { pengajuan_id: pengajuanId },
-      include: {
-        lembaga_budaya: { include: { users: true, sertifikat_nik: true } },
-        jenis_fasilitasi: true,
-        paket_fasilitasi: true,
-        surat_persetujuan: true,
-        survey_lapangan: true,
-        laporan_kegiatan: true,
-        pencairan_dana: true,
-        pengiriman_sarana: true,
-      },
+      include: PENGAJUAN_INCLUDE_ADMIN_DETAIL,
     });
 
     if (!data) throw new NotFoundException('Pengajuan tidak ditemukan');

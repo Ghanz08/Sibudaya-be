@@ -35,17 +35,10 @@ export class AdminPengajuanPengirimanService {
       );
     }
 
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
+    const filePath = this.uploadService.replaceFileFromMulter(
+      file,
+      pengajuan.pengiriman_sarana?.bukti_pengiriman,
     );
-
-    // delete old if re-uploading
-    if (pengajuan.pengiriman_sarana?.bukti_pengiriman) {
-      this.uploadService.deleteFile(
-        pengajuan.pengiriman_sarana.bukti_pengiriman,
-      );
-    }
 
     const userId = pengajuan.lembaga_budaya.user_id;
 

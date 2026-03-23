@@ -1,9 +1,7 @@
 import { PengajuanService } from './pengajuan.service';
-import { STATUS } from '../common/constants/status.constants';
 
 describe('PengajuanService', () => {
   const userId = 'user-1';
-  const lembagaId = 'lembaga-1';
 
   const proposalFile = {
     destination: 'uploads/proposal',
@@ -25,59 +23,53 @@ describe('PengajuanService', () => {
   };
 
   function createService() {
-    const prisma = {
-      lembaga_budaya: {
-        findUnique: jest.fn().mockResolvedValue({ lembaga_id: lembagaId }),
-      },
-      pengajuan: {
-        findFirst: jest.fn().mockResolvedValue(null),
-        create: jest.fn().mockImplementation(({ data }) =>
-          Promise.resolve({
-            pengajuan_id: 'pengajuan-1',
-            ...data,
-          }),
-        ),
-      },
+    const submissionService = {
+      submitPentas: jest
+        .fn()
+        .mockResolvedValue({ pengajuan_id: 'pengajuan-1' }),
+      submitHibah: jest.fn().mockResolvedValue({ pengajuan_id: 'pengajuan-2' }),
     };
 
-    const uploadService = {
-      buildFilePath: jest.fn().mockReturnValue('uploads/proposal/proposal.pdf'),
-      deleteFile: jest.fn(),
+    const queryService = {
+      findByUser: jest.fn(),
+      findDetail: jest.fn(),
     };
 
-    const notifikasiService = {
-      kirimKeAdminDanSuperAdmin: jest.fn().mockResolvedValue(undefined),
+    const laporanService = {
+      uploadLaporan: jest.fn(),
+    };
+
+    const revisionService = {
+      revisiPentas: jest.fn(),
+      revisiHibah: jest.fn(),
+      batalkanPengajuan: jest.fn(),
     };
 
     return {
       service: new PengajuanService(
-        prisma as any,
-        uploadService as any,
-        notifikasiService as any,
+        submissionService as any,
+        queryService as any,
+        laporanService as any,
+        revisionService as any,
       ),
-      prisma,
-      uploadService,
-      notifikasiService,
+      submissionService,
     };
   }
 
-  it('stores nama_bank when submitting pentas', async () => {
-    const { service, prisma } = createService();
+  it('delegates submitPentas to submission service', async () => {
+    const { service, submissionService } = createService();
 
     await service.submitPentas(userId, pentasDto as any, proposalFile);
 
-    expect(prisma.pengajuan.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          jenis_fasilitasi_id: 1,
-          nama_bank: 'Bank Mandiri',
-        }),
-      }),
+    expect(submissionService.submitPentas).toHaveBeenCalledWith(
+      userId,
+      pentasDto,
+      proposalFile,
     );
   });
 
-  it('keeps hibah flow unchanged without nama_bank', async () => {
-    const { service, prisma } = createService();
+  it('delegates submitHibah to submission service', async () => {
+    const { service, submissionService } = createService();
     const hibahDto = {
       jenis_kegiatan: 'Gamelan Slendro Pelog',
       nama_penerima: 'Wayan Sujana',
@@ -93,17 +85,10 @@ describe('PengajuanService', () => {
 
     await service.submitHibah(userId, hibahDto as any, proposalFile);
 
-    expect(prisma.pengajuan.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          jenis_fasilitasi_id: 2,
-          nama_penerima: hibahDto.nama_penerima,
-          status: STATUS.DALAM_PROSES,
-        }),
-      }),
+    expect(submissionService.submitHibah).toHaveBeenCalledWith(
+      userId,
+      hibahDto,
+      proposalFile,
     );
-
-    const createArg = (prisma.pengajuan.create as jest.Mock).mock.calls[0][0];
-    expect(createArg.data.nama_bank).toBeUndefined();
   });
 });

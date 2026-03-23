@@ -37,15 +37,10 @@ export class AdminPengajuanSuratService {
       throw new BadRequestException('Survey lapangan belum selesai');
     }
 
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
+    const filePath = this.uploadService.replaceFileFromMulter(
+      file,
+      pengajuan.surat_persetujuan?.file_path,
     );
-
-    // delete old file if re-uploading
-    if (pengajuan.surat_persetujuan?.file_path) {
-      this.uploadService.deleteFile(pengajuan.surat_persetujuan.file_path);
-    }
 
     const userId = pengajuan.lembaga_budaya.user_id;
 
