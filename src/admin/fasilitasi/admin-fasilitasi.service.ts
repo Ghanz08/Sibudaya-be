@@ -76,9 +76,7 @@ export class AdminFasilitasiService {
       );
     }
 
-    return this.prisma.paket_fasilitasi.delete({
-      where: { paket_id: paketId },
-    });
+    return this.prisma.paket_fasilitasi.delete({ where: { paket_id: paketId } });
   }
 
   async uploadTemplate(
@@ -99,7 +97,7 @@ export class AdminFasilitasiService {
     const field =
       type === 'proposal' ? 'template_proposal_file' : 'template_laporan_file';
 
-    const oldPath = jenis[field];
+    const oldPath = jenis[field] as string | null;
     if (oldPath) this.uploadService.deleteFile(oldPath);
 
     return this.prisma.jenis_fasilitasi.update({

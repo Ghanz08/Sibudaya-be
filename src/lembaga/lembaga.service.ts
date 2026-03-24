@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../common/upload/upload.service';
 import {
@@ -76,30 +77,58 @@ export class LembagaService {
       file.destination.replace(process.cwd() + '/', ''),
       file.filename,
     );
+    const tanggalTerbit = new Date(dto.tanggal_terbit);
+    const tanggalBerlakuSampai = new Date(dto.tanggal_berlaku_sampai);
+
+    if (
+      Number.isNaN(tanggalTerbit.getTime()) ||
+      Number.isNaN(tanggalBerlakuSampai.getTime())
+    ) {
+      throw new BadRequestException('Format tanggal sertifikat tidak valid');
+    }
+
+    if (tanggalBerlakuSampai < tanggalTerbit) {
+      throw new BadRequestException(
+        'Tanggal berlaku sertifikat harus setelah tanggal terbit',
+      );
+    }
 
     // Delete old file if exists
     if (lembaga.sertifikat_nik?.file_path) {
       this.uploadService.deleteFile(lembaga.sertifikat_nik.file_path);
     }
 
-    return this.prisma.sertifikat_nik.upsert({
-      where: { lembaga_id: lembaga.lembaga_id },
-      create: {
-        lembaga_id: lembaga.lembaga_id,
-        nomor_nik: dto.nomor_nik,
-        file_path: filePath,
-        tanggal_terbit: new Date(dto.tanggal_terbit),
-        tanggal_berlaku_sampai: new Date(dto.tanggal_berlaku_sampai),
-        status_verifikasi: 'PENDING',
-      },
-      update: {
-        nomor_nik: dto.nomor_nik,
-        file_path: filePath,
-        tanggal_terbit: new Date(dto.tanggal_terbit),
-        tanggal_berlaku_sampai: new Date(dto.tanggal_berlaku_sampai),
-        status_verifikasi: 'PENDING',
-        catatan_admin: null,
-      },
-    });
+    try {
+      return await this.prisma.sertifikat_nik.upsert({
+        where: { lembaga_id: lembaga.lembaga_id },
+        create: {
+          lembaga_id: lembaga.lembaga_id,
+          nomor_nik: dto.nomor_nik,
+          file_path: filePath,
+          tanggal_terbit: tanggalTerbit,
+          tanggal_berlaku_sampai: tanggalBerlakuSampai,
+          status_verifikasi: 'PENDING',
+        },
+        update: {
+          nomor_nik: dto.nomor_nik,
+          file_path: filePath,
+          tanggal_terbit: tanggalTerbit,
+          tanggal_berlaku_sampai: tanggalBerlakuSampai,
+          status_verifikasi: 'PENDING',
+          catatan_admin: null,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Nomor NIK sudah terdaftar pada lembaga lain',
+        );
+      }
+
+      throw error;
+    }
   }
 }
