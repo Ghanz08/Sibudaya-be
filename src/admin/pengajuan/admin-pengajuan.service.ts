@@ -19,6 +19,7 @@ import {
   UploadBuktiPengirimanDto,
   UploadSuratPersetujuanDto,
 } from './dto/admin-pengajuan.dto';
+import { AdminPengajuanQueryService } from './services/admin-pengajuan-query.service';
 
 @Injectable()
 export class AdminPengajuanService {
@@ -26,9 +27,14 @@ export class AdminPengajuanService {
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
     private readonly notifikasiService: NotifikasiService,
+    private readonly queryService: AdminPengajuanQueryService,
   ) {}
 
   // ── List & Detail ─────────────────────────────────────────────────────────
+
+  getDashboard(filter: FilterPengajuanDto) {
+    return this.queryService.getDashboard(filter);
+  }
 
   findAll(filter: FilterPengajuanDto) {
     return this.prisma.pengajuan.findMany({
