@@ -942,7 +942,7 @@
           }
         },
         {
-          "name": "Upload Laporan Kegiatan",
+          "name": "Upload / Unggah Ulang Laporan Kegiatan",
           "request": {
             "method": "POST",
             "header": [
@@ -962,7 +962,35 @@
                 {
                   "key": "file_laporan",
                   "type": "file",
-                  "description": "File laporan kegiatan (PDF, max 10MB)"
+                  "description": "File laporan kegiatan (PDF, max 10MB). Gunakan endpoint yang sama untuk unggah ulang setelah laporan ditolak."
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unggah Ulang Laporan Kegiatan (setelah ditolak)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pengajuan/{{pengajuan_id}}/laporan",
+              "host": ["{{base_url}}"],
+              "path": ["pengajuan", "{{pengajuan_id}}", "laporan"]
+            },
+            "description": "Endpoint yang dipakai sama dengan upload laporan biasa. Jika status laporan sebelumnya DITOLAK, request ini akan mengganti file laporan dan mengirim ulang untuk ditinjau admin.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file_laporan",
+                  "type": "file",
+                  "description": "Unggah file revisi laporan kegiatan (PDF, max 10MB)."
                 }
               ]
             }
@@ -1948,7 +1976,7 @@
     },
     {
       "name": "🧪 Flow Test — Fasilitasi Pentas (End-to-End)",
-      "description": "Jalankan secara berurutan untuk simulasi flow lengkap Fasilitasi Pentas.\n\n1. Register / Login User\n2. Daftarkan Lembaga\n3. Upload Sertifikat NIK\n4. Submit Pengajuan Pentas\n5. Login Admin → Setujui Pemeriksaan (isi paket_id)\n6. Upload Surat Persetujuan\n7. Konfirmasi Surat Persetujuan\n8. Login User → Upload Laporan Kegiatan\n9. Login Admin → Setujui Laporan\n10. Upload Bukti Transfer\n11. Konfirmasi Pencairan Selesai",
+      "description": "Jalankan secara berurutan untuk simulasi flow lengkap Fasilitasi Pentas.\n\n1. Register / Login User\n2. Daftarkan Lembaga\n3. Upload Sertifikat NIK\n4. Submit Pengajuan Pentas\n5. Login Admin → Setujui Pemeriksaan (isi paket_id)\n6. Upload Surat Persetujuan\n7. Konfirmasi Surat Persetujuan\n8. Login User → Upload/Unggah Ulang Laporan Kegiatan\n9. Login Admin → Setujui Laporan\n10. Upload Bukti Transfer\n11. Konfirmasi Pencairan Selesai",
       "item": [
         {
           "name": "1. Register User Pentas",
@@ -2302,7 +2330,7 @@
           ]
         },
         {
-          "name": "9. User Upload Laporan Kegiatan",
+          "name": "9. User Upload/Unggah Ulang Laporan Kegiatan",
           "request": {
             "method": "POST",
             "header": [
