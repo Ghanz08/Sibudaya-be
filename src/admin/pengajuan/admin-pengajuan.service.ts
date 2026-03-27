@@ -636,7 +636,8 @@ export class AdminPengajuanService {
               pengajuan_id: pengajuanId,
               tanggal_survey: now,
               status: targetStatus,
-              catatan: targetStatus === STATUS.DITOLAK ? rejectionNote : dto.note,
+              catatan:
+                targetStatus === STATUS.DITOLAK ? rejectionNote : dto.note,
             },
             update: {
               status: targetStatus,
@@ -688,8 +689,7 @@ export class AdminPengajuanService {
             where: { pengajuan_id: pengajuanId },
             data: {
               status: targetStatus,
-              tanggal_konfirmasi:
-                targetStatus === STATUS.SELESAI ? now : null,
+              tanggal_konfirmasi: targetStatus === STATUS.SELESAI ? now : null,
             },
           });
 
@@ -724,7 +724,8 @@ export class AdminPengajuanService {
             create: {
               pengajuan_id: pengajuanId,
               status: targetStatus,
-              catatan: targetStatus === STATUS.DITOLAK ? rejectionNote : undefined,
+              catatan:
+                targetStatus === STATUS.DITOLAK ? rejectionNote : undefined,
             },
             update: {
               status: targetStatus,
@@ -881,12 +882,9 @@ export class AdminPengajuanService {
 
   private async kirimNotifikasiUserDanSuperAdmin(
     userId: string,
-    judul: string,
-    pesan: string,
+    judulUser: string,
+    pesanUser: string,
   ) {
-    await Promise.all([
-      this.notifikasiService.kirim(userId, judul, pesan),
-      this.notifikasiService.kirimKeSuperAdmin(judul, pesan),
-    ]);
+    return this.notifikasiService.kirim(userId, judulUser, pesanUser);
   }
 }

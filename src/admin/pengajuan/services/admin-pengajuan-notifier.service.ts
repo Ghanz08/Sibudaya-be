@@ -7,12 +7,9 @@ export class AdminPengajuanNotifierService {
 
   async kirimNotifikasiUserDanSuperAdmin(
     userId: string,
-    judul: string,
-    pesan: string,
+    judulUser: string,
+    pesanUser: string,
   ) {
-    await Promise.all([
-      this.notifikasiService.kirim(userId, judul, pesan),
-      this.notifikasiService.kirimKeAdminDanSuperAdmin(judul, pesan, userId),
-    ]);
+    return this.notifikasiService.kirim(userId, judulUser, pesanUser);
   }
 }
