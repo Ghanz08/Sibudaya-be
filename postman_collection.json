@@ -61,6 +61,16 @@
       "type": "string"
     },
     {
+      "key": "paket_id_pentas",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paket_id_hibah",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "admin_user_id",
       "value": "",
       "type": "string"
@@ -2497,135 +2507,320 @@
           }
         },
         {
-          "name": "Tambah Paket Fasilitasi",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/fasilitasi/1/paket",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "fasilitasi", "1", "paket"]
-            },
-            "body": {
-              "mode": "raw",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "CRUD Fasilitasi Pentas (ID 1)",
+          "item": [
+            {
+              "name": "Detail Jenis Fasilitasi Pentas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "1"]
                 }
-              },
-              "raw": "{\n  \"nama_paket\": \"Paket A Baru\",\n  \"kuota\": 10,\n  \"nilai_bantuan\": \"30000000\",\n  \"catatan\": \"Hasil update koleksi\"\n}"
+              }
+            },
+            {
+              "name": "Tambah Paket Fasilitasi Pentas",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/1/paket",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "1", "paket"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  },
+                  "raw": "{\n  \"nama_paket\": \"Paket A Baru\",\n  \"kuota\": 10,\n  \"nilai_bantuan\": \"30000000\",\n  \"catatan\": \"Hasil update koleksi\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Paket Fasilitasi Pentas",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id_pentas}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "admin",
+                    "fasilitasi",
+                    "paket",
+                    "{{paket_id_pentas}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  },
+                  "raw": "{\n  \"kuota\": 25,\n  \"catatan\": \"Kuota diperbarui\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Hapus Paket Fasilitasi Pentas",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id_pentas}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "admin",
+                    "fasilitasi",
+                    "paket",
+                    "{{paket_id_pentas}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Upload Template Proposal Pentas",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/1/template/proposal",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "1", "template", "proposal"]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "description": "Template proposal (PDF/JPG/PNG)"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Upload Template Laporan Pentas",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/1/template/laporan",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "1", "template", "laporan"]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "description": "Template laporan (PDF/JPG/PNG)"
+                    }
+                  ]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Update Paket Fasilitasi",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "fasilitasi", "paket", "{{paket_id}}"]
-            },
-            "body": {
-              "mode": "raw",
-              "options": {
-                "raw": {
-                  "language": "json"
+          "name": "CRUD Fasilitasi Hibah (ID 2)",
+          "item": [
+            {
+              "name": "Detail Jenis Fasilitasi Hibah",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/2",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "2"]
                 }
-              },
-              "raw": "{\n  \"kuota\": 25,\n  \"catatan\": \"Kuota diperbarui\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Hapus Paket Fasilitasi",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "fasilitasi", "paket", "{{paket_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Upload Template Proposal (jenis_id)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/fasilitasi/1/template/proposal",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "fasilitasi", "1", "template", "proposal"]
             },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "description": "Template proposal (PDF/JPG/PNG)"
+            {
+              "name": "Tambah Paket Fasilitasi Hibah",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/2/paket",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "2", "paket"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  },
+                  "raw": "{\n  \"nama_paket\": \"Paket A Baru\",\n  \"kuota\": 10,\n  \"nilai_bantuan\": \"30000000\",\n  \"catatan\": \"Hasil update koleksi\"\n}"
                 }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Upload Template Laporan (jenis_id)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/fasilitasi/1/template/laporan",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "fasilitasi", "1", "template", "laporan"]
             },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "description": "Template laporan (PDF/JPG/PNG)"
+            {
+              "name": "Update Paket Fasilitasi Hibah",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id_hibah}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "paket", "{{paket_id_hibah}}"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  },
+                  "raw": "{\n  \"kuota\": 25,\n  \"catatan\": \"Kuota diperbarui\"\n}"
                 }
-              ]
+              }
+            },
+            {
+              "name": "Hapus Paket Fasilitasi Hibah",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/paket/{{paket_id_hibah}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "paket", "{{paket_id_hibah}}"]
+                }
+              }
+            },
+            {
+              "name": "Upload Template Proposal Hibah",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/2/template/proposal",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "2", "template", "proposal"]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "description": "Template proposal (PDF/JPG/PNG)"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Upload Template Laporan Hibah",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/fasilitasi/2/template/laporan",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "fasilitasi", "2", "template", "laporan"]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "description": "Template laporan (PDF/JPG/PNG)"
+                    }
+                  ]
+                }
+              }
             }
-          }
+          ]
         }
       ]
     },
