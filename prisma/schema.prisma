@@ -39,7 +39,7 @@ model lembaga_budaya {
 model sertifikat_nik {
   nik_id                 String         @id @default(uuid()) @db.Uuid
   lembaga_id             String         @unique @db.Uuid
-  nomor_nik              String         @unique @db.VarChar(100)
+  nomor_nik              String         @db.VarChar(100)
   file_path              String         @db.VarChar(255)
   tanggal_terbit         DateTime       @db.Date
   tanggal_berlaku_sampai DateTime       @db.Date

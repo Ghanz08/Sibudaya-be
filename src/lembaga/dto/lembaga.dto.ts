@@ -76,7 +76,6 @@ export class UploadSertifikatDto {
   @ApiProperty({ example: 'NIK.2024.00001' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
   nomor_nik: string;
 
   @ApiProperty({ example: '2024-01-01' })

@@ -123,9 +123,7 @@ export class LembagaService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new ConflictException(
-          'Nomor NIK sudah terdaftar pada lembaga lain',
-        );
+        throw new ConflictException('Data sertifikat sudah terdaftar');
       }
 
       throw error;
