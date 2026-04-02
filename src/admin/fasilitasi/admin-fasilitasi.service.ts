@@ -6,6 +6,8 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../../common/upload/upload.service';
 import { CreatePaketDto, UpdatePaketDto } from './dto/admin-fasilitasi.dto';
+import { STATUS } from '../../common/constants/status.constants';
+import { MANAGED_JENIS_FASILITASI_IDS } from '../../common/constants/jenis-fasilitasi.constants';
 
 @Injectable()
 export class AdminFasilitasiService {
@@ -16,6 +18,11 @@ export class AdminFasilitasiService {
 
   findAll() {
     return this.prisma.jenis_fasilitasi.findMany({
+      where: {
+        jenis_fasilitasi_id: {
+          in: [...MANAGED_JENIS_FASILITASI_IDS],
+        },
+      },
       include: {
         paket_fasilitasi: {
           include: {
@@ -29,6 +36,8 @@ export class AdminFasilitasiService {
   }
 
   async createPaket(jenisFasilitasiId: number, dto: CreatePaketDto) {
+    this.assertManagedJenisId(jenisFasilitasiId);
+
     const jenis = await this.prisma.jenis_fasilitasi.findUnique({
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
     });
@@ -76,7 +85,14 @@ export class AdminFasilitasiService {
       );
     }
 
-    return this.prisma.paket_fasilitasi.delete({ where: { paket_id: paketId } });
+    await this.prisma.paket_fasilitasi.delete({
+      where: { paket_id: paketId },
+    });
+
+    return {
+      message: 'Paket fasilitasi berhasil dihapus',
+      paket_id: paketId,
+    };
   }
 
   async uploadTemplate(
@@ -84,6 +100,8 @@ export class AdminFasilitasiService {
     type: 'proposal' | 'laporan',
     file: Express.Multer.File,
   ) {
+    this.assertManagedJenisId(jenisFasilitasiId);
+
     const jenis = await this.prisma.jenis_fasilitasi.findUnique({
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
     });
@@ -104,5 +122,63 @@ export class AdminFasilitasiService {
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
       data: { [field]: filePath },
     });
+  }
+
+  /**
+   * Calculate quota usage (approved pengajuan count) for a package
+   */
+  private async getQuotaUsage(paketId: string): Promise<number> {
+    const result = await this.prisma.pengajuan.count({
+      where: {
+        paket_id: paketId,
+        status: {
+          in: [STATUS.DISETUJUI, STATUS.SELESAI],
+        },
+      },
+    });
+    return result;
+  }
+
+  /**
+   * Get single jenis fasilitasi with paket and quota information
+   */
+  async findJenisByIdWithQuota(jenisFasilitasiId: number) {
+    this.assertManagedJenisId(jenisFasilitasiId);
+
+    const jenis = await this.prisma.jenis_fasilitasi.findUnique({
+      where: { jenis_fasilitasi_id: jenisFasilitasiId },
+      include: {
+        paket_fasilitasi: {
+          orderBy: { nama_paket: 'asc' },
+        },
+      },
+    });
+
+    if (!jenis) {
+      throw new NotFoundException('Jenis fasilitasi tidak ditemukan');
+    }
+
+    // Calculate quota usage for each paket
+    const paketWithQuota = await Promise.all(
+      jenis.paket_fasilitasi.map(async (paket) => {
+        const quota_used = await this.getQuotaUsage(paket.paket_id);
+        return {
+          ...paket,
+          quota_used,
+          quota_available: paket.kuota - quota_used,
+        };
+      }),
+    );
+
+    return {
+      ...jenis,
+      paket_fasilitasi: paketWithQuota,
+    };
+  }
+
+  private assertManagedJenisId(jenisFasilitasiId: number) {
+    if (!MANAGED_JENIS_FASILITASI_IDS.includes(jenisFasilitasiId)) {
+      throw new NotFoundException('Jenis fasilitasi tidak ditemukan');
+    }
   }
 }

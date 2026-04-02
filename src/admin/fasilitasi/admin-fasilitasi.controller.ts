@@ -37,6 +37,11 @@ export class AdminFasilitasiController {
     return this.service.findAll();
   }
 
+  @Get(':jenis_id')
+  findJenisByIdWithQuota(@Param('jenis_id', ParseIntPipe) jenisId: number) {
+    return this.service.findJenisByIdWithQuota(jenisId);
+  }
+
   @Post(':jenis_id/paket')
   createPaket(
     @Param('jenis_id', ParseIntPipe) jenisId: number,
@@ -46,10 +51,7 @@ export class AdminFasilitasiController {
   }
 
   @Patch('paket/:paket_id')
-  updatePaket(
-    @Param('paket_id') paketId: string,
-    @Body() dto: UpdatePaketDto,
-  ) {
+  updatePaket(@Param('paket_id') paketId: string, @Body() dto: UpdatePaketDto) {
     return this.service.updatePaket(paketId, dto);
   }
 
