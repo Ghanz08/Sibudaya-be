@@ -7,6 +7,12 @@ import { FasilitasiService } from './fasilitasi.service';
 export class FasilitasiController {
   constructor(private readonly fasilitasiService: FasilitasiService) {}
 
+  @Get('jenis-lembaga')
+  @ApiOperation({ summary: 'Daftar master jenis lembaga' })
+  findJenisLembaga() {
+    return this.fasilitasiService.findJenisLembaga();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Daftar semua jenis fasilitasi beserta paketnya' })
   findAll() {

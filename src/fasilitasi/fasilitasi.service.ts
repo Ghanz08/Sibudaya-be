@@ -5,6 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class FasilitasiService {
   constructor(private readonly prisma: PrismaService) {}
 
+  findJenisLembaga() {
+    return this.prisma.jenis_lembaga.findMany({
+      orderBy: { jenis_lembaga_id: 'asc' },
+    });
+  }
+
   findAll() {
     return this.prisma.jenis_fasilitasi.findMany({
       include: {
