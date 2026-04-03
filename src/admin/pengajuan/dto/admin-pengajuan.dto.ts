@@ -181,6 +181,16 @@ export class FilterPengajuanDto {
   @IsOptional()
   search?: string;
 
+  @ApiPropertyOptional({ example: '2026-01-01' })
+  @IsDateString()
+  @IsOptional()
+  start_date?: string;
+
+  @ApiPropertyOptional({ example: '2026-12-31' })
+  @IsDateString()
+  @IsOptional()
+  end_date?: string;
+
   @ApiPropertyOptional({ example: 'tanggal_pengajuan' })
   @IsIn(['tanggal_pengajuan', 'nama_lembaga', 'status'])
   @IsString()

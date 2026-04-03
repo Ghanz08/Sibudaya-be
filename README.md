@@ -130,7 +130,7 @@ DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/fasilitasi_dinas"
 
 # App
 PORT=3000
-FRONTEND_URL=http://localhost:3001
+FRONTEND_URL=http://localhost:3000
 
 # JWT — generate dengan perintah di bawah
 JWT_SECRET=isi_dengan_random_64_bytes
@@ -232,7 +232,7 @@ Base URL: `/api/v1/auth`
 | `POST` | `/forgot-password`  | Request reset password                     | —          |
 | `POST` | `/reset-password`   | Reset password dengan token                | —          |
 | `GET`  | `/google`           | Redirect ke halaman login Google           | —          |
-| `GET`  | `/google/callback`  | Callback Google OAuth                      | —          |
+| `GET`  | `/google/callback`  | Callback Google OAuth, redirect ke frontend callback + token query params | —          |
 | `GET`  | `/me`               | Data user yang sedang login                | JWT        |
 | `GET`  | `/admin-only`       | Contoh endpoint khusus ADMIN & SUPER_ADMIN | JWT + Role |
 | `GET`  | `/super-admin-only` | Contoh endpoint khusus SUPER_ADMIN         | JWT + Role |
@@ -357,7 +357,7 @@ uploads/                  # File upload (proposal, laporan, dll) — jangan di-c
 | `RESEND_API_KEY`         | ✅\*\* | API key Resend untuk kirim email                                        |
 | `RESEND_FROM_EMAIL`      | —      | Alamat pengirim email (default: `onboarding@resend.dev`)                |
 | `PORT`                   | —      | Port server (default: `3000`)                                           |
-| `FRONTEND_URL`           | —      | URL frontend untuk link email & CORS (default: `http://localhost:3001`) |
+| `FRONTEND_URL`           | —      | URL frontend untuk link email, redirect OAuth callback, dan CORS (default: `http://localhost:3000`) |
 | `SUPER_ADMIN_EMAIL`      | —      | Email akun SUPER_ADMIN saat seed (default sudah ada)                    |
 | `SUPER_ADMIN_PASSWORD`   | —      | Password akun SUPER_ADMIN saat seed (default sudah ada)                 |
 

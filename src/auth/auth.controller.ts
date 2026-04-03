@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Res,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import type { AuthTokens, SafeUser } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -34,7 +37,26 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private buildGoogleFrontendCallbackUrl(tokens: AuthTokens): string {
+    const configuredFrontends =
+      this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const frontendBaseUrl =
+      configuredFrontends
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)[0] ?? 'http://localhost:3000';
+
+    const callbackUrl = new URL('/auth/google/callback', frontendBaseUrl);
+    callbackUrl.searchParams.set('access_token', tokens.access_token);
+    callbackUrl.searchParams.set('refresh_token', tokens.refresh_token);
+
+    return callbackUrl.toString();
+  }
 
   // ─── Email & Password ──────────────────────────────────────────────────────
 
@@ -117,8 +139,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Callback Google OAuth — mengembalikan JWT tokens' })
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  googleCallback(@Req() req: { user: AuthTokens }) {
-    return req.user;
+  googleCallback(@Req() req: { user: AuthTokens }, @Res() res: Response) {
+    const redirectUrl = this.buildGoogleFrontendCallbackUrl(req.user);
+    return res.redirect(redirectUrl);
   }
 
   // ─── Protected Endpoints ──────────────────────────────────────────────────

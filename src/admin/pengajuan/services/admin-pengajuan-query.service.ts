@@ -100,11 +100,28 @@ export class AdminPengajuanQueryService {
 
   private buildWhere(filter: FilterPengajuanDto): Prisma.pengajuanWhereInput {
     const search = filter.search?.trim();
+    const startDate = filter.start_date
+      ? new Date(`${filter.start_date}T00:00:00.000Z`)
+      : undefined;
+    const endDate = filter.end_date
+      ? new Date(`${filter.end_date}T23:59:59.999Z`)
+      : undefined;
+
+    const tanggalPengajuanFilter =
+      startDate || endDate
+        ? {
+            ...(startDate && { gte: startDate }),
+            ...(endDate && { lte: endDate }),
+          }
+        : undefined;
 
     return {
       ...(filter.status && { status: filter.status }),
       ...(filter.jenis_fasilitasi_id && {
         jenis_fasilitasi_id: Number(filter.jenis_fasilitasi_id),
+      }),
+      ...(tanggalPengajuanFilter && {
+        tanggal_pengajuan: tanggalPengajuanFilter,
       }),
       ...(search && {
         OR: [
