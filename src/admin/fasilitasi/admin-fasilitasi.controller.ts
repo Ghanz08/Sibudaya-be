@@ -101,10 +101,7 @@ export class AdminFasilitasiController {
   }
 
   @Patch('paket/:paket_id')
-  updatePaket(
-    @Param('paket_id') paketId: string,
-    @Body() dto: UpdatePaketDto,
-  ) {
+  updatePaket(@Param('paket_id') paketId: string, @Body() dto: UpdatePaketDto) {
     return this.service.updatePaket(paketId, dto);
   }
 
