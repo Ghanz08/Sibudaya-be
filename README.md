@@ -229,6 +229,7 @@ Base URL: `/api/v1/auth`
 | `POST` | `/register`         | Register user baru (role: USER)            | —          |
 | `POST` | `/login`            | Login email & password                     | —          |
 | `POST` | `/refresh`          | Tukar refresh_token → access_token baru    | —          |
+| `POST` | `/logout`          | Hapus cookie session auth                  | —          |
 | `POST` | `/forgot-password`  | Request reset password                     | —          |
 | `POST` | `/reset-password`   | Reset password dengan token                | —          |
 | `GET`  | `/google`           | Redirect ke halaman login Google           | —          |
@@ -236,6 +237,14 @@ Base URL: `/api/v1/auth`
 | `GET`  | `/me`               | Data user yang sedang login                | JWT        |
 | `GET`  | `/admin-only`       | Contoh endpoint khusus ADMIN & SUPER_ADMIN | JWT + Role |
 | `GET`  | `/super-admin-only` | Contoh endpoint khusus SUPER_ADMIN         | JWT + Role |
+
+## Endpoint Files (Protected)
+
+Base URL: `/api/v1/files`
+
+| Method | Endpoint                | Deskripsi                                  | Auth |
+| ------ | ----------------------- | ------------------------------------------ | ---- |
+| `GET`  | `/:category/:filename`  | Download file upload secara aman (proposal, sertifikat, surat, laporan, pencairan, pengiriman, penolakan, template) | JWT  |
 
 ### Contoh Request & Response
 

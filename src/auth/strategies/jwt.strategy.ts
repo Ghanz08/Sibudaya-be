@@ -4,6 +4,22 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 
+function extractCookieToken(
+  req: { headers?: { cookie?: string } } | undefined,
+  name: string,
+): string | null {
+  const rawCookie = req?.headers?.cookie;
+  if (!rawCookie) return null;
+
+  const token = rawCookie
+    .split(';')
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${name}=`))
+    ?.split('=')[1];
+
+  return token ? decodeURIComponent(token) : null;
+}
+
 export interface JwtPayload {
   sub: string; // user_id
   email: string;
@@ -22,7 +38,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly prisma: PrismaService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (req: { headers?: { cookie?: string } }) =>
+          extractCookieToken(req, 'access_token'),
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });

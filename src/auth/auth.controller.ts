@@ -58,6 +58,49 @@ export class AuthController {
     return callbackUrl.toString();
   }
 
+  private setAuthCookies(
+    res: Response,
+    tokens: { access_token: string; refresh_token?: string },
+  ): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    res.cookie('access_token', tokens.access_token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isProduction,
+      path: '/',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    if (tokens.refresh_token) {
+      res.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: isProduction,
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+  }
+
+  private clearAuthCookies(res: Response): void {
+    res.clearCookie('access_token', { path: '/' });
+    res.clearCookie('refresh_token', { path: '/' });
+  }
+
+  private readCookie(req: { headers?: { cookie?: string } }, name: string) {
+    const rawCookie = req.headers?.cookie;
+    if (!rawCookie) return null;
+
+    const token = rawCookie
+      .split(';')
+      .map((item) => item.trim())
+      .find((item) => item.startsWith(`${name}=`))
+      ?.split('=')[1];
+
+    return token ? decodeURIComponent(token) : null;
+  }
+
   // ─── Email & Password ──────────────────────────────────────────────────────
 
   @ApiOperation({ summary: 'Register user baru (role: USER)' })
@@ -70,8 +113,10 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+    const tokens = await this.authService.register(dto);
+    this.setAuthCookies(res, tokens);
+    return tokens;
   }
 
   @ApiOperation({ summary: 'Login dengan email & password' })
@@ -85,8 +130,13 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  login(@Req() req: { user: SafeUser }) {
-    return this.authService.login(req.user);
+  async login(
+    @Req() req: { user: SafeUser },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.login(req.user);
+    this.setAuthCookies(res, tokens);
+    return tokens;
   }
 
   // ─── Token Management ──────────────────────────────────────────────────────
@@ -102,8 +152,19 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  refreshToken(@Body('refresh_token') refreshToken: string) {
-    return this.authService.refreshTokens(refreshToken);
+  async refreshToken(
+    @Body('refresh_token') refreshToken: string | undefined,
+    @Req() req: { headers?: { cookie?: string } },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const effectiveRefreshToken =
+      refreshToken ?? this.readCookie(req, 'refresh_token');
+
+    const refreshed = await this.authService.refreshTokens(
+      effectiveRefreshToken ?? '',
+    );
+    this.setAuthCookies(res, refreshed);
+    return refreshed;
   }
 
   // ─── Reset Password ────────────────────────────────────────────────────────
@@ -140,8 +201,17 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   googleCallback(@Req() req: { user: AuthTokens }, @Res() res: Response) {
+    this.setAuthCookies(res, req.user);
     const redirectUrl = this.buildGoogleFrontendCallbackUrl(req.user);
     return res.redirect(redirectUrl);
+  }
+
+  @ApiOperation({ summary: 'Logout dan hapus auth cookie' })
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res: Response) {
+    this.clearAuthCookies(res);
+    return { message: 'Logout berhasil' };
   }
 
   // ─── Protected Endpoints ──────────────────────────────────────────────────
