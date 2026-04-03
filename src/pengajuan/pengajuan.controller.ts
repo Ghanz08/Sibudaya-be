@@ -34,6 +34,7 @@ import { createDiskStorage } from '../common/upload/multer-storage.util';
 import {
   imageAndPdfFilter,
   MAX_FILE_SIZE,
+  pdfOnlyFilter,
 } from '../common/upload/file-filter.util';
 
 @ApiTags('Pengajuan')
@@ -98,7 +99,7 @@ export class PengajuanController {
   @UseInterceptors(
     FileInterceptor('file_laporan', {
       storage: createDiskStorage('uploads/laporan'),
-      fileFilter: imageAndPdfFilter,
+      fileFilter: pdfOnlyFilter,
       limits: { fileSize: MAX_FILE_SIZE },
     }),
   )

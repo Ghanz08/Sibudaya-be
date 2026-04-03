@@ -169,6 +169,21 @@ async function main() {
     });
   }
 
+  const jenisLembagaDefaults = [
+    'Sanggar',
+    'Komunitas Seni',
+    'Paguyuban',
+    'Lainnya',
+  ];
+
+  for (const namaJenisLembaga of jenisLembagaDefaults) {
+    await prisma.jenis_lembaga.upsert({
+      where: { nama: namaJenisLembaga },
+      update: {},
+      create: { nama: namaJenisLembaga },
+    });
+  }
+
   console.log('✅ Data jenis & paket fasilitasi berhasil dibuat.');
 }
 

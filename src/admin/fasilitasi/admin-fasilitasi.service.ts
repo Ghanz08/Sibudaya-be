@@ -1,11 +1,19 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../../common/upload/upload.service';
-import { CreatePaketDto, UpdatePaketDto } from './dto/admin-fasilitasi.dto';
+import {
+  CreateJenisLembagaDto,
+  CreateKuotaDto,
+  CreatePaketDto,
+  UpdateJenisLembagaDto,
+  UpdateKuotaDto,
+  UpdatePaketDto,
+} from './dto/admin-fasilitasi.dto';
 
 @Injectable()
 export class AdminFasilitasiService {
@@ -13,6 +21,92 @@ export class AdminFasilitasiService {
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
   ) {}
+
+  private normalizeNama(value: string) {
+    return value.trim().replace(/\s+/g, ' ');
+  }
+
+  findAllJenisLembaga() {
+    return this.prisma.jenis_lembaga.findMany({
+      orderBy: { jenis_lembaga_id: 'asc' },
+    });
+  }
+
+  async createJenisLembaga(dto: CreateJenisLembagaDto) {
+    const nama = this.normalizeNama(dto.nama);
+
+    const existing = await this.prisma.jenis_lembaga.findFirst({
+      where: { nama: { equals: nama, mode: 'insensitive' } },
+    });
+
+    if (existing) {
+      throw new ConflictException('Jenis lembaga sudah ada');
+    }
+
+    return this.prisma.jenis_lembaga.create({ data: { nama } });
+  }
+
+  async updateJenisLembaga(
+    jenisLembagaId: number,
+    dto: UpdateJenisLembagaDto,
+  ) {
+    const current = await this.prisma.jenis_lembaga.findUnique({
+      where: { jenis_lembaga_id: jenisLembagaId },
+    });
+
+    if (!current) {
+      throw new NotFoundException('Jenis lembaga tidak ditemukan');
+    }
+
+    const namaBaru = this.normalizeNama(dto.nama);
+    const duplicate = await this.prisma.jenis_lembaga.findFirst({
+      where: {
+        nama: { equals: namaBaru, mode: 'insensitive' },
+        NOT: { jenis_lembaga_id: jenisLembagaId },
+      },
+    });
+
+    if (duplicate) {
+      throw new ConflictException('Nama jenis lembaga sudah digunakan');
+    }
+
+    const [, updatedJenisLembaga] = await this.prisma.$transaction([
+      this.prisma.lembaga_budaya.updateMany({
+        where: { jenis_kesenian: current.nama },
+        data: { jenis_kesenian: namaBaru },
+      }),
+      this.prisma.jenis_lembaga.update({
+        where: { jenis_lembaga_id: jenisLembagaId },
+        data: { nama: namaBaru },
+      }),
+    ]);
+
+    return updatedJenisLembaga;
+  }
+
+  async deleteJenisLembaga(jenisLembagaId: number) {
+    const current = await this.prisma.jenis_lembaga.findUnique({
+      where: { jenis_lembaga_id: jenisLembagaId },
+    });
+
+    if (!current) {
+      throw new NotFoundException('Jenis lembaga tidak ditemukan');
+    }
+
+    const usageCount = await this.prisma.lembaga_budaya.count({
+      where: { jenis_kesenian: current.nama },
+    });
+
+    if (usageCount > 0) {
+      throw new BadRequestException(
+        'Jenis lembaga tidak dapat dihapus karena masih digunakan oleh data lembaga',
+      );
+    }
+
+    return this.prisma.jenis_lembaga.delete({
+      where: { jenis_lembaga_id: jenisLembagaId },
+    });
+  }
 
   findAll() {
     return this.prisma.jenis_fasilitasi.findMany({
@@ -26,6 +120,31 @@ export class AdminFasilitasiService {
       },
       orderBy: { jenis_fasilitasi_id: 'asc' },
     });
+  }
+
+  async findKuotaByJenis(jenisFasilitasiId: number) {
+    const jenis = await this.prisma.jenis_fasilitasi.findUnique({
+      where: { jenis_fasilitasi_id: jenisFasilitasiId },
+    });
+    if (!jenis) throw new NotFoundException('Jenis fasilitasi tidak ditemukan');
+
+    return this.prisma.paket_fasilitasi.findMany({
+      where: { jenis_fasilitasi_id: jenisFasilitasiId },
+      include: { _count: { select: { pengajuan: true } } },
+      orderBy: { nama_paket: 'asc' },
+    });
+  }
+
+  createKuota(jenisFasilitasiId: number, dto: CreateKuotaDto) {
+    return this.createPaket(jenisFasilitasiId, dto);
+  }
+
+  updateKuota(paketId: string, dto: UpdateKuotaDto) {
+    return this.updatePaket(paketId, dto);
+  }
+
+  deleteKuota(paketId: string) {
+    return this.deletePaket(paketId);
   }
 
   async createPaket(jenisFasilitasiId: number, dto: CreatePaketDto) {

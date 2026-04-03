@@ -27,7 +27,6 @@ export class PengajuanSubmissionService {
     }
 
     const lembaga = await this.getLembagaOrThrow(userId);
-    await this.checkDuplikatPengajuan(lembaga.lembaga_id, 1);
 
     const proposalPath =
       this.uploadService.buildFilePathFromMulter(proposalFile);
@@ -73,7 +72,6 @@ export class PengajuanSubmissionService {
     }
 
     const lembaga = await this.getLembagaOrThrow(userId);
-    await this.checkDuplikatPengajuan(lembaga.lembaga_id, 2);
 
     const proposalPath =
       this.uploadService.buildFilePathFromMulter(proposalFile);
@@ -118,24 +116,5 @@ export class PengajuanSubmissionService {
     }
 
     return lembaga;
-  }
-
-  private async checkDuplikatPengajuan(
-    lembagaId: string,
-    jenisFasilitasiId: number,
-  ) {
-    const active = await this.prisma.pengajuan.findFirst({
-      where: {
-        lembaga_id: lembagaId,
-        jenis_fasilitasi_id: jenisFasilitasiId,
-        status: { notIn: [STATUS.DITOLAK, STATUS.SELESAI] },
-      },
-    });
-
-    if (active) {
-      throw new BadRequestException(
-        'Anda sudah memiliki pengajuan aktif untuk jenis fasilitasi ini',
-      );
-    }
   }
 }

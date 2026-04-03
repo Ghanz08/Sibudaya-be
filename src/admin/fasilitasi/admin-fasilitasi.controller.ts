@@ -17,7 +17,14 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Role, Roles } from '../../auth/decorators/roles.decorator';
 import { AdminFasilitasiService } from './admin-fasilitasi.service';
-import { CreatePaketDto, UpdatePaketDto } from './dto/admin-fasilitasi.dto';
+import {
+  CreateJenisLembagaDto,
+  CreateKuotaDto,
+  CreatePaketDto,
+  UpdateJenisLembagaDto,
+  UpdateKuotaDto,
+  UpdatePaketDto,
+} from './dto/admin-fasilitasi.dto';
 import { createDiskStorage } from '../../common/upload/multer-storage.util';
 import {
   imageAndPdfFilter,
@@ -32,9 +39,57 @@ import {
 export class AdminFasilitasiController {
   constructor(private readonly service: AdminFasilitasiService) {}
 
+  @Get('jenis-lembaga')
+  findAllJenisLembaga() {
+    return this.service.findAllJenisLembaga();
+  }
+
+  @Post('jenis-lembaga')
+  createJenisLembaga(@Body() dto: CreateJenisLembagaDto) {
+    return this.service.createJenisLembaga(dto);
+  }
+
+  @Patch('jenis-lembaga/:jenis_lembaga_id')
+  updateJenisLembaga(
+    @Param('jenis_lembaga_id', ParseIntPipe) jenisLembagaId: number,
+    @Body() dto: UpdateJenisLembagaDto,
+  ) {
+    return this.service.updateJenisLembaga(jenisLembagaId, dto);
+  }
+
+  @Delete('jenis-lembaga/:jenis_lembaga_id')
+  deleteJenisLembaga(
+    @Param('jenis_lembaga_id', ParseIntPipe) jenisLembagaId: number,
+  ) {
+    return this.service.deleteJenisLembaga(jenisLembagaId);
+  }
+
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get(':jenis_id/kuota')
+  findKuotaByJenis(@Param('jenis_id', ParseIntPipe) jenisId: number) {
+    return this.service.findKuotaByJenis(jenisId);
+  }
+
+  @Post(':jenis_id/kuota')
+  createKuota(
+    @Param('jenis_id', ParseIntPipe) jenisId: number,
+    @Body() dto: CreateKuotaDto,
+  ) {
+    return this.service.createKuota(jenisId, dto);
+  }
+
+  @Patch('kuota/:paket_id')
+  updateKuota(@Param('paket_id') paketId: string, @Body() dto: UpdateKuotaDto) {
+    return this.service.updateKuota(paketId, dto);
+  }
+
+  @Delete('kuota/:paket_id')
+  deleteKuota(@Param('paket_id') paketId: string) {
+    return this.service.deleteKuota(paketId);
   }
 
   @Post(':jenis_id/paket')
