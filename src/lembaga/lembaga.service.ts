@@ -98,35 +98,25 @@ export class LembagaService {
       this.uploadService.deleteFile(lembaga.sertifikat_nik.file_path);
     }
 
-    try {
-      return await this.prisma.sertifikat_nik.upsert({
-        where: { lembaga_id: lembaga.lembaga_id },
-        create: {
-          lembaga_id: lembaga.lembaga_id,
-          nomor_nik: dto.nomor_nik,
-          file_path: filePath,
-          tanggal_terbit: tanggalTerbit,
-          tanggal_berlaku_sampai: tanggalBerlakuSampai,
-          status_verifikasi: 'PENDING',
-        },
-        update: {
-          nomor_nik: dto.nomor_nik,
-          file_path: filePath,
-          tanggal_terbit: tanggalTerbit,
-          tanggal_berlaku_sampai: tanggalBerlakuSampai,
-          status_verifikasi: 'PENDING',
-          catatan_admin: null,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('Data sertifikat sudah terdaftar');
-      }
-
-      throw error;
-    }
+    // Auto update if exists, create if not (no error thrown)
+    return await this.prisma.sertifikat_nik.upsert({
+      where: { lembaga_id: lembaga.lembaga_id },
+      create: {
+        lembaga_id: lembaga.lembaga_id,
+        nomor_nik: dto.nomor_nik,
+        file_path: filePath,
+        tanggal_terbit: tanggalTerbit,
+        tanggal_berlaku_sampai: tanggalBerlakuSampai,
+        status_verifikasi: 'PENDING',
+      },
+      update: {
+        nomor_nik: dto.nomor_nik,
+        file_path: filePath,
+        tanggal_terbit: tanggalTerbit,
+        tanggal_berlaku_sampai: tanggalBerlakuSampai,
+        status_verifikasi: 'PENDING',
+        catatan_admin: null,
+      },
+    });
   }
 }
