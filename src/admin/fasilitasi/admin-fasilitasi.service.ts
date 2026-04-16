@@ -48,10 +48,7 @@ export class AdminFasilitasiService {
     return this.prisma.jenis_lembaga.create({ data: { nama } });
   }
 
-  async updateJenisLembaga(
-    jenisLembagaId: number,
-    dto: UpdateJenisLembagaDto,
-  ) {
+  async updateJenisLembaga(jenisLembagaId: number, dto: UpdateJenisLembagaDto) {
     const current = await this.prisma.jenis_lembaga.findUnique({
       where: { jenis_lembaga_id: jenisLembagaId },
     });
@@ -234,7 +231,7 @@ export class AdminFasilitasiService {
     const field =
       type === 'proposal' ? 'template_proposal_file' : 'template_laporan_file';
 
-    const oldPath = jenis[field] as string | null;
+    const oldPath = jenis[field];
     if (oldPath) this.uploadService.deleteFile(oldPath);
 
     return this.prisma.jenis_fasilitasi.update({

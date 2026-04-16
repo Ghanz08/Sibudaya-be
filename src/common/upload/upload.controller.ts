@@ -66,7 +66,9 @@ export class UploadController {
       throw new ForbiddenException('Tidak memiliki akses ke file ini');
     }
 
-    const fullPath = normalize(join(process.cwd(), 'uploads', category, filename));
+    const fullPath = normalize(
+      join(process.cwd(), 'uploads', category, filename),
+    );
     if (!existsSync(fullPath)) {
       throw new NotFoundException('File tidak ditemukan');
     }
