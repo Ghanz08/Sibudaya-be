@@ -61,6 +61,7 @@ model jenis_fasilitasi {
   status                 String             @default("ACTIVE") @db.VarChar(20)
   template_proposal_file String?            @db.VarChar(255)
   template_laporan_file  String?            @db.VarChar(255)
+  panduan_file           String?            @db.VarChar(255)
   paket_fasilitasi       paket_fasilitasi[]
   pengajuan              pengajuan[]
 }

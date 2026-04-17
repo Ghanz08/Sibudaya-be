@@ -1,11 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
-import { FileFilterCallback } from 'multer';
+
+type MulterFileFilterCallback = (
+  error: Error | null,
+  acceptFile: boolean,
+) => void;
 
 export const imageAndPdfFilter = (
   _req: Request,
   file: Express.Multer.File,
-  callback: FileFilterCallback,
+  callback: MulterFileFilterCallback,
 ) => {
   const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
   if (!allowed.includes(file.mimetype)) {
@@ -13,6 +17,7 @@ export const imageAndPdfFilter = (
       new BadRequestException(
         'Hanya file PDF, JPG, atau PNG yang diperbolehkan',
       ),
+      false,
     );
   }
   callback(null, true);
@@ -21,10 +26,13 @@ export const imageAndPdfFilter = (
 export const pdfOnlyFilter = (
   _req: Request,
   file: Express.Multer.File,
-  callback: FileFilterCallback,
+  callback: MulterFileFilterCallback,
 ) => {
   if (file.mimetype !== 'application/pdf') {
-    return callback(new BadRequestException('File wajib dalam format PDF'));
+    return callback(
+      new BadRequestException('File wajib dalam format PDF'),
+      false,
+    );
   }
   callback(null, true);
 };

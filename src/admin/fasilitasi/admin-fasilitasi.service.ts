@@ -216,7 +216,7 @@ export class AdminFasilitasiService {
 
   async uploadTemplate(
     jenisFasilitasiId: number,
-    type: 'proposal' | 'laporan',
+    type: 'proposal' | 'laporan' | 'panduan',
     file: Express.Multer.File,
   ) {
     this.assertManagedJenisId(jenisFasilitasiId);
@@ -232,14 +232,18 @@ export class AdminFasilitasiService {
     );
 
     const field =
-      type === 'proposal' ? 'template_proposal_file' : 'template_laporan_file';
+      type === 'proposal'
+        ? 'template_proposal_file'
+        : type === 'laporan'
+          ? 'template_laporan_file'
+          : 'panduan_file';
 
     const oldPath = jenis[field] as string | null;
     if (oldPath) this.uploadService.deleteFile(oldPath);
 
     return this.prisma.jenis_fasilitasi.update({
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
-      data: { [field]: filePath },
+      data: { [field]: filePath } as Record<string, string>,
     });
   }
 

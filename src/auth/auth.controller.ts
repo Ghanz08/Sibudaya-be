@@ -34,6 +34,36 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
+const authTokensExample = {
+  access_token:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access-token-signature',
+  refresh_token:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh-token-signature',
+  user: {
+    user_id: 'c6b97f28-6f0f-45d5-bdcf-e3556b094ef8',
+    email: 'user@example.com',
+    role: 'USER',
+    provider: 'LOCAL',
+    created_at: '2026-04-16T08:30:00.000Z',
+    first_name: 'Budi',
+    last_name: 'Santoso',
+    no_telp: '081234567890',
+    address: 'Jl. Merdeka No. 10, Bandung',
+  },
+};
+
+const authErrorExample = (
+  statusCode: number,
+  message: string | string[],
+  path: string,
+) => ({
+  success: false,
+  statusCode,
+  message,
+  path,
+  timestamp: '2026-04-16T08:30:00.000Z',
+});
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -108,8 +138,21 @@ export class AuthController {
     status: 201,
     description:
       'Berhasil register, mengembalikan access_token & refresh_token',
+    content: {
+      'application/json': {
+        example: authTokensExample,
+      },
+    },
   })
-  @ApiResponse({ status: 409, description: 'Email sudah terdaftar' })
+  @ApiResponse({
+    status: 409,
+    description: 'Email sudah terdaftar',
+    content: {
+      'application/json': {
+        example: authErrorExample(409, 'Email sudah terdaftar', '/api/v1/auth/register'),
+      },
+    },
+  })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -124,8 +167,21 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Berhasil login, mengembalikan access_token & refresh_token',
+    content: {
+      'application/json': {
+        example: authTokensExample,
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Email atau password salah' })
+  @ApiResponse({
+    status: 401,
+    description: 'Email atau password salah',
+    content: {
+      'application/json': {
+        example: authErrorExample(401, 'Unauthorized', '/api/v1/auth/login'),
+      },
+    },
+  })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -148,7 +204,18 @@ export class AuthController {
       required: ['refresh_token'],
     },
   })
-  @ApiResponse({ status: 200, description: 'access_token baru' })
+  @ApiResponse({
+    status: 200,
+    description: 'access_token baru',
+    content: {
+      'application/json': {
+        example: {
+          access_token:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new-access-token-signature',
+        },
+      },
+    },
+  })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
@@ -173,6 +240,14 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Reset token (di produksi dikirim via email)',
+    content: {
+      'application/json': {
+        example: {
+          message:
+            'Jika email terdaftar, link reset password akan dikirim ke email kamu.',
+        },
+      },
+    },
   })
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
@@ -182,7 +257,17 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Reset password menggunakan token' })
-  @ApiResponse({ status: 200, description: 'Password berhasil direset' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password berhasil direset',
+    content: {
+      'application/json': {
+        example: {
+          message: 'Password berhasil direset',
+        },
+      },
+    },
+  })
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -207,6 +292,15 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Logout dan hapus auth cookie' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logout berhasil',
+    content: {
+      'application/json': {
+        example: { message: 'Logout berhasil' },
+      },
+    },
+  })
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@Res({ passthrough: true }) res: Response) {
@@ -218,8 +312,24 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Ambil data user yang sedang login' })
   @ApiBearerAuth('access-token')
-  @ApiResponse({ status: 200, description: 'Data user' })
-  @ApiResponse({ status: 401, description: 'Token tidak valid' })
+  @ApiResponse({
+    status: 200,
+    description: 'Data user',
+    content: {
+      'application/json': {
+        example: authTokensExample.user,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token tidak valid',
+    content: {
+      'application/json': {
+        example: authErrorExample(401, 'Unauthorized', '/api/v1/auth/me'),
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getProfile(@CurrentUser() user: SafeUser) {
@@ -228,8 +338,28 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Update profil user yang sedang login' })
   @ApiBearerAuth('access-token')
-  @ApiResponse({ status: 200, description: 'Data user setelah update' })
-  @ApiResponse({ status: 401, description: 'Token tidak valid' })
+  @ApiResponse({
+    status: 200,
+    description: 'Data user setelah update',
+    content: {
+      'application/json': {
+        example: {
+          ...authTokensExample.user,
+          first_name: 'Budi Update',
+          no_telp: '081300000000',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token tidak valid',
+    content: {
+      'application/json': {
+        example: authErrorExample(401, 'Unauthorized', '/api/v1/auth/me'),
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateProfile(@CurrentUser() user: SafeUser, @Body() dto: UpdateProfileDto) {
@@ -238,6 +368,18 @@ export class AuthController {
 
   @ApiOperation({ summary: '[ADMIN & SUPER_ADMIN] Contoh endpoint terbatas' })
   @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: 200,
+    description: 'Berhasil akses endpoint admin',
+    content: {
+      'application/json': {
+        example: {
+          message: 'Selamat datang Admin, admin@example.com',
+          role: 'ADMIN',
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get('admin-only')
@@ -247,6 +389,17 @@ export class AuthController {
 
   @ApiOperation({ summary: '[SUPER_ADMIN] Contoh endpoint khusus Super Admin' })
   @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: 200,
+    description: 'Berhasil akses endpoint super admin',
+    content: {
+      'application/json': {
+        example: {
+          message: 'Halo Super Admin, superadmin@example.com',
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   @Get('super-admin-only')

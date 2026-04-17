@@ -141,4 +141,20 @@ export class AdminFasilitasiController {
   ) {
     return this.service.uploadTemplate(jenisId, 'laporan', file);
   }
+
+  @Post(':jenis_id/template/panduan')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: createDiskStorage('uploads/template'),
+      fileFilter: imageAndPdfFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  uploadTemplatePanduan(
+    @Param('jenis_id', ParseIntPipe) jenisId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.service.uploadTemplate(jenisId, 'panduan', file);
+  }
 }

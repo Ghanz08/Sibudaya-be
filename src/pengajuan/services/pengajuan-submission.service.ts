@@ -31,10 +31,24 @@ export class PengajuanSubmissionService {
     const proposalPath =
       this.uploadService.buildFilePathFromMulter(proposalFile);
 
+    const paket = dto.paket_id
+      ? await this.prisma.paket_fasilitasi.findFirst({
+          where: {
+            paket_id: dto.paket_id,
+            jenis_fasilitasi_id: 1,
+          },
+        })
+      : null;
+
+    if (dto.paket_id && !paket) {
+      throw new BadRequestException('Paket fasilitasi tidak valid');
+    }
+
     const result = await this.prisma.pengajuan.create({
       data: {
         lembaga_id: lembaga.lembaga_id,
         jenis_fasilitasi_id: 1,
+        paket_id: paket?.paket_id ?? null,
         jenis_kegiatan: dto.jenis_kegiatan,
         judul_kegiatan: dto.judul_kegiatan,
         tujuan_kegiatan: dto.tujuan_kegiatan,
@@ -76,10 +90,24 @@ export class PengajuanSubmissionService {
     const proposalPath =
       this.uploadService.buildFilePathFromMulter(proposalFile);
 
+    const paket = dto.paket_id
+      ? await this.prisma.paket_fasilitasi.findFirst({
+          where: {
+            paket_id: dto.paket_id,
+            jenis_fasilitasi_id: 2,
+          },
+        })
+      : null;
+
+    if (dto.paket_id && !paket) {
+      throw new BadRequestException('Paket fasilitasi tidak valid');
+    }
+
     const result = await this.prisma.pengajuan.create({
       data: {
         lembaga_id: lembaga.lembaga_id,
         jenis_fasilitasi_id: 2,
+        paket_id: paket?.paket_id ?? null,
         jenis_kegiatan: dto.jenis_kegiatan,
         nama_penerima: dto.nama_penerima,
         alamat_pengiriman: dto.alamat_pengiriman,
