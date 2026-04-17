@@ -73,6 +73,18 @@ export class UploadController {
       throw new NotFoundException('File tidak ditemukan');
     }
 
+    const frontendOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
+    // Allow PDF preview in iframe from configured frontend origin(s).
+    res.removeHeader('X-Frame-Options');
+    res.setHeader(
+      'Content-Security-Policy',
+      `frame-ancestors 'self' ${frontendOrigins.join(' ')}`,
+    );
+
     return res.sendFile(fullPath);
   }
 
