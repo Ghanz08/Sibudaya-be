@@ -771,22 +771,22 @@ export class AdminPengajuanService {
           });
 
           if (isPentas) {
-                if (targetStatus === STATUS.SELESAI) {
-                  await tx.pencairan_dana.upsert({
-                    where: { pengajuan_id: pengajuanId },
-                    create: {
-                      pengajuan_id: pengajuanId,
-                      status: STATUS.DALAM_PROSES,
-                    },
-                    update: {
-                      status: STATUS.DALAM_PROSES,
-                    },
-                  });
-                } else {
-                  await tx.pencairan_dana.deleteMany({
-                    where: { pengajuan_id: pengajuanId },
-                  });
-                }
+            if (targetStatus === STATUS.SELESAI) {
+              await tx.pencairan_dana.upsert({
+                where: { pengajuan_id: pengajuanId },
+                create: {
+                  pengajuan_id: pengajuanId,
+                  status: STATUS.DALAM_PROSES,
+                },
+                update: {
+                  status: STATUS.DALAM_PROSES,
+                },
+              });
+            } else {
+              await tx.pencairan_dana.deleteMany({
+                where: { pengajuan_id: pengajuanId },
+              });
+            }
           }
 
           await tx.pengajuan.update({

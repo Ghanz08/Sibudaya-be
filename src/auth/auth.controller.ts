@@ -156,7 +156,10 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const tokens = await this.authService.register(dto);
     this.setAuthCookies(res, tokens);
     return tokens;
@@ -186,11 +189,11 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  async login(
+  login(
     @Req() req: { user: SafeUser },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const tokens = await this.authService.login(req.user);
+    const tokens = this.authService.login(req.user);
     this.setAuthCookies(res, tokens);
     return tokens;
   }
