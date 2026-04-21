@@ -102,6 +102,7 @@ export class UploadController {
           OR: [
             { template_proposal_file: { endsWith: suffix } },
             { template_laporan_file: { endsWith: suffix } },
+            { panduan_file: { endsWith: suffix } },
           ],
         },
       });

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -155,6 +156,9 @@ export class AdminFasilitasiController {
     @Param('jenis_id', ParseIntPipe) jenisId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    if (!file) {
+      throw new BadRequestException('File tidak ditemukan');
+    }
     return this.service.uploadTemplate(jenisId, 'panduan', file);
   }
 }

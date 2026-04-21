@@ -228,19 +228,25 @@ export class AdminFasilitasiService {
       file.filename,
     );
 
-    const field =
-      type === 'proposal'
-        ? 'template_proposal_file'
-        : type === 'laporan'
-          ? 'template_laporan_file'
-          : 'panduan_file';
+    let oldPath: string | null = null;
+    let updatePayload: Record<string, string>;
 
-    const oldPath = jenis[field];
+    if (type === 'proposal') {
+      oldPath = jenis.template_proposal_file;
+      updatePayload = { template_proposal_file: filePath };
+    } else if (type === 'laporan') {
+      oldPath = jenis.template_laporan_file;
+      updatePayload = { template_laporan_file: filePath };
+    } else {
+      oldPath = jenis.panduan_file;
+      updatePayload = { panduan_file: filePath };
+    }
+
     if (oldPath) this.uploadService.deleteFile(oldPath);
 
     return this.prisma.jenis_fasilitasi.update({
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
-      data: { [field]: filePath } as Record<string, string>,
+      data: updatePayload,
     });
   }
 
