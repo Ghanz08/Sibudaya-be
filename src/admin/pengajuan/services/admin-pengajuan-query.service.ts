@@ -31,7 +31,55 @@ export class AdminPengajuanQueryService {
         where: {
           ...where,
           status: STATUS.DALAM_PROSES,
-          status_pemeriksaan: STATUS.DALAM_PROSES,
+          OR: [
+            { status_pemeriksaan: STATUS.DALAM_PROSES },
+            {
+              jenis_fasilitasi_id: 2,
+              status_pemeriksaan: { in: [STATUS.DISETUJUI, STATUS.SELESAI] },
+              survey_lapangan: { is: null },
+            },
+            { survey_lapangan: { is: { status: STATUS.DALAM_PROSES } } },
+            {
+              jenis_fasilitasi_id: 1,
+              status_pemeriksaan: { in: [STATUS.DISETUJUI, STATUS.SELESAI] },
+              surat_persetujuan: { is: null },
+            },
+            {
+              jenis_fasilitasi_id: 2,
+              survey_lapangan: { is: { status: STATUS.SELESAI } },
+              surat_persetujuan: { is: null },
+            },
+            { surat_persetujuan: { is: { status: STATUS.DALAM_PROSES } } },
+            {
+              jenis_fasilitasi_id: 2,
+              surat_persetujuan: { is: { status: STATUS.SELESAI } },
+              pengiriman_sarana: { is: null },
+            },
+            { pengiriman_sarana: { is: { status: STATUS.DALAM_PROSES } } },
+            { laporan_kegiatan: { is: { status: STATUS.DALAM_PROSES } } },
+            {
+              jenis_fasilitasi_id: 1,
+              laporan_kegiatan: { is: { status: STATUS.DISETUJUI } },
+              pencairan_dana: { is: null },
+            },
+            {
+              jenis_fasilitasi_id: 1,
+              pencairan_dana: {
+                is: {
+                  bukti_transfer: null,
+                  OR: [
+                    { tanggal_pencairan: { not: null } },
+                    { total_dana: { not: null } },
+                  ],
+                },
+              },
+            },
+            {
+              jenis_fasilitasi_id: 1,
+              pencairan_dana: { is: { status: { not: STATUS.SELESAI } } },
+            },
+            { pencairan_dana: { is: { status: STATUS.DALAM_PROSES } } },
+          ],
         },
       }),
       this.prisma.pengajuan.count({

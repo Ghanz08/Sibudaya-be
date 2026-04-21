@@ -37,25 +37,27 @@ export class AdminPengajuanPencairanService {
     if (pengajuan.pencairan_dana.status !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Bukti transfer sudah diunggah');
     }
-    if (pengajuan.pencairan_dana.bukti_transfer) {
-      throw new BadRequestException('Bukti transfer sudah diunggah');
-    }
 
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
-    );
+    const filePath = this.uploadService.replaceFileFromMulter(file, pengajuan.pencairan_dana.bukti_transfer);
 
     const userId = pengajuan.lembaga_budaya.user_id;
 
+    const data: {
+      bukti_transfer: string;
+      total_dana?: number;
+      tanggal_pencairan?: Date;
+      status: string;
+    } = {
+      bukti_transfer: filePath,
+      status: STATUS.DALAM_PROSES,
+    };
+
+    if (dto.total_dana !== undefined) data.total_dana = dto.total_dana;
+    if (dto.tanggal_pencairan) data.tanggal_pencairan = new Date(dto.tanggal_pencairan);
+
     const pencairan = await this.prisma.pencairan_dana.update({
       where: { pengajuan_id: pengajuanId },
-      data: {
-        bukti_transfer: filePath,
-        total_dana: dto.total_dana,
-        tanggal_pencairan: new Date(dto.tanggal_pencairan),
-        status: STATUS.DALAM_PROSES,
-      },
+      data,
     });
 
     await this.notifierService.kirimNotifikasiUserDanSuperAdmin(

@@ -130,16 +130,18 @@ export class UpdateTimelineStatusDto {
 // ── Pencairan Dana ───────────────────────────────────────────────────────────
 
 export class UploadBuktiPencairanDto {
-  @ApiProperty({ example: '30000000' })
+  @ApiPropertyOptional({ example: '30000000' })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  total_dana: number;
+  @IsOptional()
+  total_dana?: number;
 
-  @ApiProperty({ example: '2026-05-01' })
+  @ApiPropertyOptional({ example: '2026-05-01' })
   @IsDateString()
   @IsNotEmpty()
-  tanggal_pencairan: string;
+  @IsOptional()
+  tanggal_pencairan?: string;
 
   @ApiPropertyOptional()
   @IsString()

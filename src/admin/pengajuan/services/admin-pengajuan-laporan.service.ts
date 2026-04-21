@@ -75,17 +75,22 @@ export class AdminPengajuanLaporanService {
       throw new BadRequestException('Laporan sudah diproses sebelumnya');
     }
 
+    const rejectionNote = dto.catatan_admin?.trim();
+    if (!rejectionNote) {
+      throw new BadRequestException('Alasan penolakan wajib diisi');
+    }
+
     const userId = pengajuan.lembaga_budaya.user_id;
 
     await this.prisma.laporan_kegiatan.update({
       where: { pengajuan_id: pengajuanId },
-      data: { status: STATUS.DITOLAK, catatan_admin: dto.catatan_admin },
+      data: { status: STATUS.DITOLAK, catatan_admin: rejectionNote },
     });
 
     await this.notifierService.kirimNotifikasiUserDanSuperAdmin(
       userId,
       'Laporan Kegiatan Ditolak',
-      `Laporan kegiatan Anda perlu diperbaiki. Alasan: ${dto.catatan_admin}`,
+      `Laporan kegiatan Anda perlu diperbaiki. Alasan: ${rejectionNote}`,
     );
 
     return { message: 'Laporan ditolak' };

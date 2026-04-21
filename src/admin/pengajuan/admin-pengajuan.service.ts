@@ -37,20 +37,7 @@ export class AdminPengajuanService {
   }
 
   findAll(filter: FilterPengajuanDto) {
-    return this.prisma.pengajuan.findMany({
-      where: {
-        ...(filter.status && { status: filter.status }),
-        ...(filter.jenis_fasilitasi_id && {
-          jenis_fasilitasi_id: Number(filter.jenis_fasilitasi_id),
-        }),
-      },
-      include: {
-        lembaga_budaya: { include: { sertifikat_nik: true } },
-        jenis_fasilitasi: true,
-        paket_fasilitasi: true,
-      },
-      orderBy: { tanggal_pengajuan: 'desc' },
-    });
+    return this.queryService.findAll(filter);
   }
 
   async findDetail(pengajuanId: string) {
@@ -123,9 +110,9 @@ export class AdminPengajuanService {
 
     let suratPath: string | undefined;
     if (suratFile) {
-      suratPath = this.uploadService.buildFilePath(
-        suratFile.destination.replace(process.cwd() + '/', ''),
-        suratFile.filename,
+      suratPath = this.uploadService.replaceFileFromMulter(
+        suratFile,
+        pengajuan.surat_penolakan_file,
       );
     }
 
@@ -208,7 +195,11 @@ export class AdminPengajuanService {
     return survey;
   }
 
-  async tolakSurvey(pengajuanId: string, dto: TolakSurveyDto) {
+  async tolakSurvey(
+    pengajuanId: string,
+    dto: TolakSurveyDto,
+    suratFile?: Express.Multer.File,
+  ) {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
     this.assertJenisHibah(pengajuan);
 
@@ -223,6 +214,14 @@ export class AdminPengajuanService {
 
     const userId = pengajuan.lembaga_budaya.user_id;
 
+    let suratPath: string | undefined;
+    if (suratFile) {
+      suratPath = this.uploadService.replaceFileFromMulter(
+        suratFile,
+        pengajuan.surat_penolakan_file,
+      );
+    }
+
     await this.prisma.$transaction([
       this.prisma.survey_lapangan.update({
         where: { pengajuan_id: pengajuanId },
@@ -230,7 +229,10 @@ export class AdminPengajuanService {
       }),
       this.prisma.pengajuan.update({
         where: { pengajuan_id: pengajuanId },
-        data: { status: STATUS.DITOLAK },
+        data: {
+          status: STATUS.DITOLAK,
+          ...(suratPath && { surat_penolakan_file: suratPath }),
+        },
       }),
     ]);
 
@@ -382,7 +384,11 @@ export class AdminPengajuanService {
     return { message: 'Laporan disetujui' };
   }
 
-  async tolakLaporan(pengajuanId: string, dto: TolakLaporanDto) {
+  async tolakLaporan(
+    pengajuanId: string,
+    dto: TolakLaporanDto,
+    suratFile?: Express.Multer.File,
+  ) {
     const pengajuan = await this.findDetailOrThrow(pengajuanId);
 
     if (!pengajuan.laporan_kegiatan) {
@@ -394,17 +400,37 @@ export class AdminPengajuanService {
       throw new BadRequestException('Laporan sudah diproses sebelumnya');
     }
 
+    const rejectionNote = dto.catatan_admin?.trim();
+    if (!rejectionNote) {
+      throw new BadRequestException('Alasan penolakan wajib diisi');
+    }
+
+    let suratPath: string | undefined;
+    if (suratFile) {
+      suratPath = this.uploadService.replaceFileFromMulter(
+        suratFile,
+        pengajuan.surat_penolakan_file,
+      );
+    }
+
     const userId = pengajuan.lembaga_budaya.user_id;
 
     await this.prisma.laporan_kegiatan.update({
       where: { pengajuan_id: pengajuanId },
-      data: { status: STATUS.DITOLAK, catatan_admin: dto.catatan_admin },
+      data: { status: STATUS.DITOLAK, catatan_admin: rejectionNote },
+    });
+
+    await this.prisma.pengajuan.update({
+      where: { pengajuan_id: pengajuanId },
+      data: {
+        ...(suratPath && { surat_penolakan_file: suratPath }),
+      },
     });
 
     await this.kirimNotifikasiUserDanSuperAdmin(
       userId,
       'Laporan Kegiatan Ditolak',
-      `Laporan kegiatan Anda perlu diperbaiki. Alasan: ${dto.catatan_admin}`,
+      `Laporan kegiatan Anda perlu diperbaiki. Alasan: ${rejectionNote}`,
     );
 
     return { message: 'Laporan ditolak' };
@@ -431,25 +457,27 @@ export class AdminPengajuanService {
     if (pengajuan.pencairan_dana.status !== STATUS.DALAM_PROSES) {
       throw new BadRequestException('Bukti transfer sudah diunggah');
     }
-    if (pengajuan.pencairan_dana.bukti_transfer) {
-      throw new BadRequestException('Bukti transfer sudah diunggah');
-    }
 
-    const filePath = this.uploadService.buildFilePath(
-      file.destination.replace(process.cwd() + '/', ''),
-      file.filename,
-    );
+    const filePath = this.uploadService.replaceFileFromMulter(file, pengajuan.pencairan_dana.bukti_transfer);
 
     const userId = pengajuan.lembaga_budaya.user_id;
 
+    const data: {
+      bukti_transfer: string;
+      total_dana?: number;
+      tanggal_pencairan?: Date;
+      status: string;
+    } = {
+      bukti_transfer: filePath,
+      status: STATUS.DALAM_PROSES,
+    };
+
+    if (dto.total_dana !== undefined) data.total_dana = dto.total_dana;
+    if (dto.tanggal_pencairan) data.tanggal_pencairan = new Date(dto.tanggal_pencairan);
+
     const pencairan = await this.prisma.pencairan_dana.update({
       where: { pengajuan_id: pengajuanId },
-      data: {
-        bukti_transfer: filePath,
-        total_dana: dto.total_dana,
-        tanggal_pencairan: new Date(dto.tanggal_pencairan),
-        status: STATUS.DALAM_PROSES,
-      },
+      data,
     });
 
     await this.kirimNotifikasiUserDanSuperAdmin(

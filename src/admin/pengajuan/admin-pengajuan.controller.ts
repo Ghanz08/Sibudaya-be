@@ -113,10 +113,22 @@ export class AdminPengajuanController {
 
   @Patch(':id/survey/tolak')
   @ApiOperation({
-    summary: '[Hibah] Tandai survey lapangan ditolak (terminal)',
+    summary: '[Hibah] Tandai survey lapangan ditolak dengan surat penolakan (opsional)',
   })
-  tolakSurvey(@Param('id') id: string, @Body() dto: TolakSurveyDto) {
-    return this.service.tolakSurvey(id, dto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('surat_penolakan', {
+      storage: createDiskStorage('uploads/penolakan'),
+      fileFilter: imageAndPdfFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  tolakSurvey(
+    @Param('id') id: string,
+    @Body() dto: TolakSurveyDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.service.tolakSurvey(id, dto, file);
   }
 
   // ── Step: Surat Persetujuan ───────────────────────────────────────────────
@@ -157,8 +169,20 @@ export class AdminPengajuanController {
 
   @Patch(':id/laporan/tolak')
   @ApiOperation({ summary: 'Tolak laporan kegiatan (wajib alasan)' })
-  tolakLaporan(@Param('id') id: string, @Body() dto: TolakLaporanDto) {
-    return this.service.tolakLaporan(id, dto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('surat_penolakan', {
+      storage: createDiskStorage('uploads/penolakan'),
+      fileFilter: imageAndPdfFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  tolakLaporan(
+    @Param('id') id: string,
+    @Body() dto: TolakLaporanDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.service.tolakLaporan(id, dto, file);
   }
 
   @Patch(':id/timeline/status')
