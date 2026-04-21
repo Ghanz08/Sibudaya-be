@@ -103,54 +103,53 @@ async function main() {
   const paketPentas = [
     {
       paket_id: 'a1b2c3d4-e5f6-4a7b-8c9d-e0f1a2b3c4d5',
-      nama_paket: 'Paket Pembinaan',
+      nama_paket: 'Pembinaan Sanggar',
       kuota: 10,
       nilai_bantuan: 60_000_000,
     },
     {
       paket_id: 'b2c3d4e5-f6a7-4b8c-9d0e-f1a2b3c4d5e6',
-      nama_paket: 'Paket A',
+      nama_paket: 'Pentas Seni',
       kuota: 20,
       nilai_bantuan: 30_000_000,
-    },
-    {
-      paket_id: 'c3d4e5f6-a7b8-4c9d-0e1f-a2b3c4d5e6f7',
-      nama_paket: 'Paket B',
-      kuota: 30,
-      nilai_bantuan: 20_000_000,
-    },
-    {
-      paket_id: 'd4e5f6a7-b8c9-4d0e-1f2a-b3c4d5e6f7a8',
-      nama_paket: 'Paket C',
-      kuota: 40,
-      nilai_bantuan: 10_000_000,
-    },
-    {
-      paket_id: 'e5f6a7b8-c9d0-4e1f-2a3b-c4d5e6f7a8b9',
-      nama_paket: 'Paket D',
-      kuota: 50,
-      nilai_bantuan: 5_000_000,
     },
   ];
   for (const p of paketPentas) {
     await prisma.paket_fasilitasi.upsert({
       where: { paket_id: p.paket_id },
-      update: {},
+      update: {
+        nama_paket: p.nama_paket,
+        kuota: p.kuota,
+        nilai_bantuan: p.nilai_bantuan,
+      },
       create: { jenis_fasilitasi_id: 1, ...p },
     });
   }
+
+  await prisma.paket_fasilitasi.deleteMany({
+    where: {
+      jenis_fasilitasi_id: 1,
+      paket_id: {
+        in: [
+          'c3d4e5f6-a7b8-4c9d-0e1f-a2b3c4d5e6f7',
+          'd4e5f6a7-b8c9-4d0e-1f2a-b3c4d5e6f7a8',
+          'e5f6a7b8-c9d0-4e1f-2a3b-c4d5e6f7a8b9',
+        ],
+      },
+    },
+  });
 
   // Paket Fasilitasi Hibah
   const paketHibah = [
     {
       paket_id: 'f6a7b8c9-d0e1-4f2a-3b4c-d5e6f7a8b9c0',
-      nama_paket: 'Gamelan Slendro Pelog',
+      nama_paket: 'Gamelan Besi Slendro Pelog',
       kuota: 5,
       nilai_bantuan: null,
     },
     {
       paket_id: 'a7b8c9d0-e1f2-4a3b-4c5d-e6f7a8b9c0d1',
-      nama_paket: 'Alat Musik Kesenian',
+      nama_paket: 'Alat Kesenian',
       kuota: 20,
       nilai_bantuan: null,
     },
@@ -164,7 +163,11 @@ async function main() {
   for (const p of paketHibah) {
     await prisma.paket_fasilitasi.upsert({
       where: { paket_id: p.paket_id },
-      update: {},
+      update: {
+        nama_paket: p.nama_paket,
+        kuota: p.kuota,
+        nilai_bantuan: p.nilai_bantuan,
+      },
       create: { jenis_fasilitasi_id: 2, ...p },
     });
   }
