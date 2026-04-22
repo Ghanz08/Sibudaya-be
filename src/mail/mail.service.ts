@@ -25,7 +25,7 @@ export class MailService {
     toEmail: string,
     resetToken: string,
   ): Promise<void> {
-    const resetLink = `${this.frontendUrl}/auth/reset-password?token=${resetToken}`;
+    const resetLink = `${this.frontendUrl}/reset-password?token=${resetToken}`;
 
     const html = `
 <!DOCTYPE html>
