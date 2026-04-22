@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../../common/upload/upload.service';
+import { Prisma } from '../../generated/prisma/client';
 import {
   CreateJenisLembagaDto,
   CreateKuotaDto,
@@ -19,6 +20,8 @@ import { MANAGED_JENIS_FASILITASI_IDS } from '../../common/constants/jenis-fasil
 
 @Injectable()
 export class AdminFasilitasiService {
+  private tableColumnsCache = new Map<string, Set<string>>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
@@ -107,24 +110,100 @@ export class AdminFasilitasiService {
     });
   }
 
-  findAll() {
-    return this.prisma.jenis_fasilitasi.findMany({
-      where: {
-        jenis_fasilitasi_id: {
-          in: [...MANAGED_JENIS_FASILITASI_IDS],
-        },
-      },
-      include: {
-        paket_fasilitasi: {
-          where: { deleted_at: null },
-          include: {
-            _count: { select: { pengajuan: true } },
-          },
-          orderBy: { nama_paket: 'asc' },
-        },
-      },
-      orderBy: { jenis_fasilitasi_id: 'asc' },
-    });
+  async findAll() {
+    const managedIds = [...MANAGED_JENIS_FASILITASI_IDS];
+    const managedIdsSql = managedIds.join(',');
+
+    const jenisColumns = await this.getTableColumns('jenis_fasilitasi');
+    const hasJenisDeskripsi = jenisColumns.has('deskripsi');
+    const hasJenisStatus = jenisColumns.has('status');
+    const hasTemplateProposal = jenisColumns.has('template_proposal_file');
+    const hasTemplateLaporan = jenisColumns.has('template_laporan_file');
+    const hasPanduan = jenisColumns.has('panduan_file');
+
+    type JenisRow = {
+      jenis_fasilitasi_id: number;
+      nama: string;
+      deskripsi: string | null;
+      status: string | null;
+      template_proposal_file: string | null;
+      template_laporan_file: string | null;
+      panduan_file: string | null;
+    };
+
+    const jenisRows = await this.prisma.$queryRawUnsafe<JenisRow[]>(`
+      SELECT
+        j.jenis_fasilitasi_id,
+        j.nama,
+        ${hasJenisDeskripsi ? 'j.deskripsi' : 'NULL'} AS deskripsi,
+        ${hasJenisStatus ? 'j.status' : 'NULL'} AS status,
+        ${hasTemplateProposal ? 'j.template_proposal_file' : 'NULL'} AS template_proposal_file,
+        ${hasTemplateLaporan ? 'j.template_laporan_file' : 'NULL'} AS template_laporan_file,
+        ${hasPanduan ? 'j.panduan_file' : 'NULL'} AS panduan_file
+      FROM "jenis_fasilitasi" j
+      WHERE j.jenis_fasilitasi_id IN (${managedIdsSql})
+      ORDER BY j.jenis_fasilitasi_id ASC
+    `);
+
+    const paketColumns = await this.getTableColumns('paket_fasilitasi');
+    const hasDeletedAt = paketColumns.has('deleted_at');
+    const hasNilaiBantuan = paketColumns.has('nilai_bantuan');
+    const hasCatatan = paketColumns.has('catatan');
+
+    type PaketRow = {
+      paket_id: string;
+      jenis_fasilitasi_id: number;
+      nama_paket: string;
+      kuota: number;
+      nilai_bantuan: string | number | null;
+      catatan: string | null;
+      deleted_at: Date | string | null;
+      pengajuan_count: number;
+    };
+
+    const paketRows = await this.prisma.$queryRawUnsafe<PaketRow[]>(`
+      SELECT
+        p.paket_id,
+        p.jenis_fasilitasi_id,
+        p.nama_paket,
+        p.kuota,
+        ${hasNilaiBantuan ? 'p.nilai_bantuan' : 'NULL'} AS nilai_bantuan,
+        ${hasCatatan ? 'p.catatan' : 'NULL'} AS catatan,
+        ${hasDeletedAt ? 'p.deleted_at' : 'NULL'} AS deleted_at,
+        COALESCE(pc.total, 0)::int AS pengajuan_count
+      FROM "paket_fasilitasi" p
+      LEFT JOIN (
+        SELECT paket_id, COUNT(*)::int AS total
+        FROM "pengajuan"
+        GROUP BY paket_id
+      ) pc ON pc.paket_id = p.paket_id
+      WHERE p.jenis_fasilitasi_id IN (${managedIdsSql})
+      ${hasDeletedAt ? 'AND p.deleted_at IS NULL' : ''}
+      ORDER BY p.nama_paket ASC
+    `);
+
+    const paketByJenis = new Map<number, PaketRow[]>();
+    for (const paket of paketRows) {
+      const current = paketByJenis.get(paket.jenis_fasilitasi_id) ?? [];
+      current.push(paket);
+      paketByJenis.set(paket.jenis_fasilitasi_id, current);
+    }
+
+    return jenisRows.map((jenis) => ({
+      ...jenis,
+      paket_fasilitasi: (paketByJenis.get(jenis.jenis_fasilitasi_id) ?? []).map(
+        (paket) => ({
+          paket_id: paket.paket_id,
+          jenis_fasilitasi_id: paket.jenis_fasilitasi_id,
+          nama_paket: paket.nama_paket,
+          kuota: paket.kuota,
+          nilai_bantuan: paket.nilai_bantuan,
+          catatan: paket.catatan,
+          deleted_at: paket.deleted_at,
+          _count: { pengajuan: paket.pengajuan_count },
+        }),
+      ),
+    }));
   }
 
   async findKuotaByJenis(jenisFasilitasiId: number) {
@@ -312,5 +391,21 @@ export class AdminFasilitasiService {
     if (!MANAGED_JENIS_FASILITASI_IDS.includes(jenisFasilitasiId)) {
       throw new NotFoundException('Jenis fasilitasi tidak ditemukan');
     }
+  }
+
+  private async getTableColumns(tableName: string): Promise<Set<string>> {
+    const cached = this.tableColumnsCache.get(tableName);
+    if (cached) return cached;
+
+    const rows = await this.prisma.$queryRaw<{ column_name: string }[]>(Prisma.sql`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = ${tableName}
+    `);
+
+    const columns = new Set(rows.map((row) => row.column_name));
+    this.tableColumnsCache.set(tableName, columns);
+    return columns;
   }
 }
