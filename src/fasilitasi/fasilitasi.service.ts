@@ -15,6 +15,7 @@ export class FasilitasiService {
     return this.prisma.jenis_fasilitasi.findMany({
       include: {
         paket_fasilitasi: {
+          where: { deleted_at: null },
           orderBy: { nilai_bantuan: 'desc' },
         },
       },
@@ -23,7 +24,10 @@ export class FasilitasiService {
 
   findPaketByJenis(jenisFasilitasiId: number) {
     return this.prisma.paket_fasilitasi.findMany({
-      where: { jenis_fasilitasi_id: jenisFasilitasiId },
+      where: {
+        jenis_fasilitasi_id: jenisFasilitasiId,
+        deleted_at: null,
+      },
       orderBy: { nilai_bantuan: 'desc' },
     });
   }

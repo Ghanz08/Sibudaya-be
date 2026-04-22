@@ -33,6 +33,20 @@ export class AdminPengajuanPemeriksaanService {
       );
     }
 
+    if (dto.paket_id) {
+      const paket = await this.prisma.paket_fasilitasi.findFirst({
+        where: {
+          paket_id: dto.paket_id,
+          jenis_fasilitasi_id: pengajuan.jenis_fasilitasi_id,
+          deleted_at: null,
+        },
+      });
+
+      if (!paket) {
+        throw new BadRequestException('Paket fasilitasi tidak valid');
+      }
+    }
+
     const userId = pengajuan.lembaga_budaya.user_id;
 
     const updated = await this.prisma.pengajuan.update({

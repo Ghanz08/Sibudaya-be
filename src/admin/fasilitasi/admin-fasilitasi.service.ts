@@ -116,6 +116,7 @@ export class AdminFasilitasiService {
       },
       include: {
         paket_fasilitasi: {
+          where: { deleted_at: null },
           include: {
             _count: { select: { pengajuan: true } },
           },
@@ -133,7 +134,10 @@ export class AdminFasilitasiService {
     if (!jenis) throw new NotFoundException('Jenis fasilitasi tidak ditemukan');
 
     return this.prisma.paket_fasilitasi.findMany({
-      where: { jenis_fasilitasi_id: jenisFasilitasiId },
+      where: {
+        jenis_fasilitasi_id: jenisFasilitasiId,
+        deleted_at: null,
+      },
       include: { _count: { select: { pengajuan: true } } },
       orderBy: { nama_paket: 'asc' },
     });
@@ -171,8 +175,11 @@ export class AdminFasilitasiService {
   }
 
   async updatePaket(paketId: string, dto: UpdatePaketDto) {
-    const paket = await this.prisma.paket_fasilitasi.findUnique({
-      where: { paket_id: paketId },
+    const paket = await this.prisma.paket_fasilitasi.findFirst({
+      where: {
+        paket_id: paketId,
+        deleted_at: null,
+      },
     });
     if (!paket) throw new NotFoundException('Paket tidak ditemukan');
 
@@ -192,17 +199,15 @@ export class AdminFasilitasiService {
   async deletePaket(paketId: string) {
     const paket = await this.prisma.paket_fasilitasi.findUnique({
       where: { paket_id: paketId },
-      include: { _count: { select: { pengajuan: true } } },
     });
     if (!paket) throw new NotFoundException('Paket tidak ditemukan');
-    if (paket._count.pengajuan > 0) {
-      throw new BadRequestException(
-        'Paket tidak dapat dihapus karena masih digunakan oleh pengajuan yang ada',
-      );
+    if (paket.deleted_at) {
+      throw new BadRequestException('Paket sudah dihapus sebelumnya');
     }
 
-    await this.prisma.paket_fasilitasi.delete({
+    await this.prisma.paket_fasilitasi.update({
       where: { paket_id: paketId },
+      data: { deleted_at: new Date() },
     });
 
     return {
@@ -275,6 +280,7 @@ export class AdminFasilitasiService {
       where: { jenis_fasilitasi_id: jenisFasilitasiId },
       include: {
         paket_fasilitasi: {
+          where: { deleted_at: null },
           orderBy: { nama_paket: 'asc' },
         },
       },

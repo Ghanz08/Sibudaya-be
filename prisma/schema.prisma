@@ -73,6 +73,7 @@ model paket_fasilitasi {
   kuota               Int
   nilai_bantuan       Decimal?         @db.Decimal(18, 2)
   catatan             String?
+  deleted_at          DateTime?
   jenis_fasilitasi    jenis_fasilitasi @relation(fields: [jenis_fasilitasi_id], references: [jenis_fasilitasi_id], onDelete: Cascade)
   pengajuan           pengajuan[]
 }

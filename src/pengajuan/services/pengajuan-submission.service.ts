@@ -36,6 +36,7 @@ export class PengajuanSubmissionService {
           where: {
             paket_id: dto.paket_id,
             jenis_fasilitasi_id: 1,
+            deleted_at: null,
           },
         })
       : null;
@@ -95,6 +96,7 @@ export class PengajuanSubmissionService {
           where: {
             paket_id: dto.paket_id,
             jenis_fasilitasi_id: 2,
+            deleted_at: null,
           },
         })
       : null;
